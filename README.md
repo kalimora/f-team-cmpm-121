@@ -1,3 +1,22 @@
-# f-team-cmpm-121
 # Devlog Entry - [11/16/2024]
+
 ## Introducing the team
+Our team is composed of dedicated members each bringing unique skills and roles:
+- **Kaylee Morales (Tools Lead)**: I'll be researching and setting up tools and configurations for the team, and helping with coding style guidelines and auto-formatting systems. I'll also support source control and deployment setups.
+- **Hasina (Engine Lead)**: Hasina will oversee the creative direction and possibly the engine standards, teaching the team about our chosen engine and ensuring our game's design remains consistent.
+- **Celestial (Design Lead)**: Celestial will assist in setting the creative vision, contributing to art and design elements, ensuring they align with our game's objectives.
+- **Shea (Assistant Tools Lead)**: Supporting tool setups and configurations, and ensuring all team members are comfortable with our development environment.
+- **Samina (Assistant Engine Lead)**: Focused on engine research and integration, making code examples, and maintaining the organization of our project's codebase.
+
+## Tools and materials
+- **Engine/Platform**: We have chosen to use Godot for its open-source nature and support for both 2D and 3D environments. Its integrated scripting language, GDScript, is accessible and powerful, ideal for rapid development cycles.
+- **Programming Languages**: GDScript will be our primary scripting language due to its Python-like syntax and seamless integration with Godot. We may use JSON for configuration and data files.
+- **IDEs and Tools**: We will use the built-in Godot IDE for developing and scripting our game. For asset creation, Blender will be used for 3D models and Adobe Photoshop for creating textures and UI designs.
+- **Alternate Platform**: As an alternative, we are considering using Unity, which would shift our primary scripting language to C# and alter our approach to handling game physics and rendering.
+
+## Outlook
+- **Innovations**: We aim to integrate advanced NPCs that can adapt to player actions, which might be more complex than typical enemy designs.
+- **Challenges**: The most challenging part will likely be ensuring smooth integration and performance optimization for different platforms.
+- **Learning Goals**: We are excited to deepen our understanding of Godot and improve our proficiency in using the engine for complex game mechanics.
+
+Feel free to adapt this file as we change our objectives/engine!
