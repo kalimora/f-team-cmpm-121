@@ -9,10 +9,11 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 - **Samina (Assistant Engine Lead)**: Focused on engine research and integration, making code examples, and maintaining the organization of our project's codebase.
 
 ## Tools and materials
-- **Engine/Platform**: We have chosen to use Godot for its open-source nature and support for both 2D and 3D environments. Its integrated scripting language, GDScript, is accessible and powerful, ideal for rapid development cycles.
-- **Programming Languages**: GDScript will be our primary scripting language due to its Python-like syntax and seamless integration with Godot. We may use JSON for configuration and data files.
-- **IDEs and Tools**: We will use the built-in Godot IDE for developing and scripting our game. For asset creation, Blender will be used for 3D models and Adobe Photoshop for creating textures and UI designs.
-- **Alternate Platform**: As an alternative, we are considering using Unity, which would shift our primary scripting language to C# and alter our approach to handling game physics and rendering.
+- **Engine/Platform**: Phaser Library. We think that Phaser is good for the game we plan to make, and we all have experience developing with Phaser.
+- **Programming Languages**: JavaScript or Typescript, as well as JSON as the data language. These languages are heavily used in the Phaser library, so these are the ones we will use. 
+- **IDEs and Tools**: VScode as the IDE and potentially Aseprite to create assets. We all have experience with VScode so it would make sense to use this IDE and one member has experience with Aseprite and is willing to help other members learn as well. 
+- **Alternate Platform**: As an alternative, we are considering using Unity, which would shift our primary scripting language to C# and alter our approach to handling game physics and rendering. 
+
 
 ## Outlook
 - **Innovations**: We aim to integrate advanced NPCs that can adapt to player actions, which might be more complex than typical enemy designs.
