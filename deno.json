@@ -1,0 +1,7 @@
+{
+    "lint": {
+      "files": {
+        "exclude": ["./lib/phaser.js"]
+      }
+    }
+  }
