@@ -57,7 +57,7 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 - In the main scene (GameScene.js) I created logic for a 5x5 grid and an array to store the grid in. Values such as gridSize, cellSize, and gridOrgin can all be put into an interface down the line, for now, I am defining them as variables in create(). The actual grid is created by calling createGrid(). Update responds to keyboard input and interacts with the Player class to manipulate its movement accordingly.
 - I defined the class Player in Player.js which handles all logic for the player. The main part of this class is the move() and updatePosition() methods. The move function is designed to update the logical position of the player on the grid adding the change in x & y (deltaX & deltaY) to the player's current position. The method updatePositon is designed to update the visual position of the player.
 
-### F0.a
+### F0.b
 - I implemented the manual time advancement in the GameScene.js.
 - In GameScene.js, I created a button that when clicked, advances the game time. This is essential for simulating turn-based mechanics where players can strategize and plan their moves according to the game time.
 - I added a visual indicator on the screen to show the current game time, updating it each time the player uses the button to advance time.
