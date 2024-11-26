@@ -3,7 +3,7 @@
 import BootScene from './scenes/BootScene.js';
 import GameScene from './scenes/GameScene.js'; 
 
-let config = {
+const config = {
     parent: 'phaser-game',
     type: Phaser.WEBGL,
     width: 800, 
@@ -25,4 +25,4 @@ let config = {
 
 config.scene = [BootScene, GameScene];
 
-const game = new Phaser.Game(config);
+const _game = new Phaser.Game(config);
