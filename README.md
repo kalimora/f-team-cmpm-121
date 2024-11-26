@@ -20,4 +20,38 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 - **Challenges**: The most challenging part will likely be ensuring smooth integration and performance optimization for different platforms.
 - **Learning Goals**: We are excited to deepen our understanding of Godot and improve our proficiency in using the engine for complex game mechanics.
 
+
+## Documentation
+### F0.a
+```
+📦f-team-cmpm-121
+ ┣ 📂.github
+ ┃ ┗ 📂workflows
+ ┃ ┃ ┗ 📜deno.yml           # workflow config
+ ┣ 📂assets
+ ┃ ┣ 📂audio                # audio assets
+ ┃ ┗ 📂img                  # Sprites
+ ┣ 📂lib
+ ┃ ┗ 📜phaser.js
+ ┣ 📂src
+ ┃ ┣ 📂managers
+ ┃ ┃ ┗ 📜TurnManager.js     # Turn-based simulation logic (F0.b, F0.d).
+ ┃ ┃ ┗ 📜PlantManager.js    # Plant growth and interactions (F0.e, F0.f).
+ ┃ ┣ 📂objects
+ ┃ ┃ ┗ 📜Player.js          # Player logic and movement (F0.a)
+ ┃ ┃ ┗ 📜GridCell.js        # Cell-specific logic (F0.c, F0.d).
+ ┃ ┃ ┗ 📜Plant.js           # Plant-specific logic (F0.e, F0.f).
+ ┃ ┣ 📂scenes
+ ┃ ┃ ┣ 📜BootScene.js       # Preload assets, initial setup.
+ ┃ ┃ ┗ 📜GameScene.js       # Main gameplay logic (F0.a–F0.g entry point).
+ ┃ ┗ 📜main.js              # Game configuration module
+ ┣ 📜deno.json              # deno configurations
+ ┣ 📜index.css              # Styles
+ ┣ 📜index.html             # Main HTML file
+ ┗ 📜README.md
+```
+- I added a sprite sheet for the character in the BootScene.
+- In the main scene (GameScene.js) I created logic for a 5x5 grid and an array to store the grid in. Values such as gridSize, cellSize, and gridOrgin can all be put into an interface down the line, for now, I am defining them as variables in create(). The actual grid is created by calling createGrid(). Update responds to keyboard input and interacts with the Player class to manipulate its movement accordingly.
+- I defined the class Player in Player.js which handles all logic for the player. The main part of this class is the move() and updatePosition() methods. The move function is designed to update the logical position of the player on the grid adding the change in x & y (deltaX & deltaY) to the player's current position. The method updatePositon is designed to update the visual position of the player.
+
 Feel free to adapt this file as we change our objectives/engine!
