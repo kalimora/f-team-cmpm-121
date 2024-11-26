@@ -60,6 +60,7 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 ### F0.b
 - I implemented the manual time advancement in the GameScene.js.
 - In GameScene.js, I created a button that when clicked, advances the game time. This is essential for simulating turn-based mechanics where players can strategize and plan their moves according to the game time.
+- In GameScene.js, I integrated a manual time control mechanism essential for our turn-based simulation. This feature allows players to advance the in-game time manually using a dedicated button, strategically influencing the game's state based on their decisions.
 - I added a visual indicator on the screen to show the current game time, updating it each time the player uses the button to advance time.
 
 
