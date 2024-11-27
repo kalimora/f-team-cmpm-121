@@ -3,9 +3,22 @@ import Player from "../objects/Player.js";
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super("gameScene");
+    this.gameTime = 0; // Initialize gameTime to track game time
   }
 
   create() {
+    const buttonX = 50; // 50 pixels from the left edge of the game viewport
+    const buttonY = this.game.config.height / 6; // Vertically centered in the game viewport
+    const titleX = buttonX - 35;
+    // Adding a title above the button
+    this.add.text(titleX, buttonY - 65, 'Advance Time', { font: '16px Arial', fill: '#ffffff' });
+    this.timeButton = this.add.image(buttonX, buttonY, 'timeAdvanceButton')
+        .setInteractive()
+        .on('pointerdown', () => this.advanceTime());
+
+    // Set up keyboard input
+    this.cursors = this.input.keyboard.createCursorKeys();
+
     // Grid setup (might want to put this into an init() function or interface later)
     this.gridSize = 5; // 5x5 grid
     this.cellSize = 100; // Size of each grid cell
@@ -78,4 +91,17 @@ export default class GameScene extends Phaser.Scene {
       this.player.move(0, 1);
     }
   }
+  advanceTime() {
+    this.gameTime += 1; // Increment the game's time counter by one unit
+    console.log('Time advanced to: ' + this.gameTime);
+    this.handleTimeBasedEvents(); // Call a method to handle events that occur due to time advancement
+    // Log a specific message when the button is clicked
+    console.log(`Button clicked at gameTime: ${this.gameTime}`);
+}
+
+handleTimeBasedEvents() {
+    // Example: Update resources, spawn enemies, change the environment
+    console.log('Handling events for gameTime:', this.gameTime);
+    // Here you can implement any game logic that depends on time(enemy spawns, resources regren, enviornment)
+}
 }

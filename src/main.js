@@ -23,4 +23,6 @@ const config = {
     }
 };
 
+config.scene = [BootScene, GameScene];
+
 const _game = new Phaser.Game(config);
