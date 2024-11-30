@@ -41,6 +41,10 @@ export default class GameScene extends Phaser.Scene {
 
     // Set up keyboard input
     this.cursors = this.input.keyboard.createCursorKeys();
+
+    // Set up reap and sow actions
+    this.input.keyboard.on('keydown-R', () => this.reapPlant()); // Reap a plant when 'R' key is pressed
+    this.input.keyboard.on('keydown-S', () => this.sowPlant()); // Sow a plant when 'S' key is pressed
   }
 
   createGrid() {
@@ -62,7 +66,7 @@ export default class GameScene extends Phaser.Scene {
           .setStrokeStyle(2, 0x000000);
 
         // Add cell to the grid array
-        this.grid.push({ x, y, rect: cell });
+        this.grid.push({ x, y, rect: cell, hasPlant: false, plantSprite: null });
       }
     }
   }
@@ -91,17 +95,58 @@ export default class GameScene extends Phaser.Scene {
       this.player.move(0, 1);
     }
   }
+
   advanceTime() {
     this.gameTime += 1; // Increment the game's time counter by one unit
     console.log('Time advanced to: ' + this.gameTime);
     this.handleTimeBasedEvents(); // Call a method to handle events that occur due to time advancement
     // Log a specific message when the button is clicked
     console.log(`Button clicked at gameTime: ${this.gameTime}`);
-}
+  }
 
-handleTimeBasedEvents() {
+  handleTimeBasedEvents() {
     // Example: Update resources, spawn enemies, change the environment
     console.log('Handling events for gameTime:', this.gameTime);
-    // Here you can implement any game logic that depends on time(enemy spawns, resources regren, enviornment)
-}
+    // Here you can implement any game logic that depends on time(enemy spawns, resources regen, environment)
+  }
+
+  reapPlant() {
+    const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
+    if (playerCell && playerCell.hasPlant) {
+      console.log(`Reaping plant at (${playerCell.x}, ${playerCell.y})`); // Log the action of reaping a plant
+      playerCell.hasPlant = false; // Set the cell's plant status to false
+      if (playerCell.plantSprite) {
+        playerCell.plantSprite.destroy(); // Remove the plant sprite
+        playerCell.plantSprite = null; // Set the plant sprite reference to null
+      }
+      playerCell.rect.setFillStyle(0x057a26); // Reset the cell color to indicate no plant
+    } else {
+      console.log('No plant to reap here!'); // Log a message if there's no plant to reap
+    }
+  }
+
+  sowPlant() {
+    const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
+    if (playerCell && !playerCell.hasPlant) {
+      console.log(`Sowing plant at (${playerCell.x}, ${playerCell.y})`); // Log the action of sowing a plant
+      playerCell.hasPlant = true; // Set the cell's plant status to true
+      playerCell.rect.setFillStyle(0x8b4513); // Change the cell color to indicate a plant is present
+  
+      // Add a visual representation of the plant using a specific frame
+      playerCell.plantSprite = this.add.sprite(
+        playerCell.rect.x,
+        playerCell.rect.y,
+        'plant'
+      ).setScale(2); // Add a plant sprite and scale it down to fit in the cell
+    } else {
+      console.log('A plant is already here!'); // Log a message if there's already a plant in the cell
+    }
+  }  
+
+  getPlayerCell() {
+    // Find the cell where the player is currently located
+    return this.grid.find(
+      (cell) => cell.x === this.player.gridX && cell.y === this.player.gridY
+    );
+  }
 }

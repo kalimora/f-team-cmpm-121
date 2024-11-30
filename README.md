@@ -4,7 +4,7 @@
 Our team is composed of dedicated members each bringing unique skills and roles:
 - **Kaylee Morales (Tools Lead)**: I'll be researching and setting up tools and configurations for the team, and helping with coding style guidelines and auto-formatting systems. I'll also support source control and deployment setups.
 - **Hasina (Engine Lead)**: Hasina will oversee the creative direction and possibly the engine standards, teaching the team about our chosen engine and ensuring our game's design remains consistent.
-- **Celestial (Design Lead)**: Celestial will assist in setting the creative vision, contributing to art and design elements, ensuring they align with our game's objectives.
+- **Celeste (Design Lead)**: Celeste will assist in setting the creative vision, contributing to art and design elements, ensuring they align with our game's objectives.
 - **Shea (Assistant Tools Lead)**: Supporting tool setups and configurations, and ensuring all team members are comfortable with our development environment.
 - **Samina (Assistant Engine Lead)**: Focused on engine research and integration, making code examples, and maintaining the organization of our project's codebase.
 
@@ -63,5 +63,23 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 - In GameScene.js, I integrated a manual time control mechanism essential for our turn-based simulation. This feature allows players to advance the in-game time manually using a dedicated button, strategically influencing the game's state based on their decisions.
 - I added a visual indicator on the screen to show the current game time, updating it each time the player uses the button to advance time.
 
+### F0.c
+- I implemented the ability for the player to reap and sow plants on grid cells in the GameScene.js.
+- In GameScene.js, I added keyboard controls (R key for reaping and S key for sowing) that allow players to interact with nearby grid cells to manage plants.
+- The player can only reap or sow plants when standing on the corresponding grid cell, ensuring close proximity for these actions.
+- Added visual indicators that change the color of a grid cell based on whether a plant is sown or reaped, providing feedback on the plant's status.
+- Added a visual sprite for the plant that is a visual representation of the plant on the grid when sown.
+
+### F0.d
+- 
+
+### F0.e
+- 
+
+### F0.f
+- 
+
+## F0.g
+- 
 
 Feel free to adapt this file as we change our objectives!
