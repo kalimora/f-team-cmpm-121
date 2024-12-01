@@ -127,11 +127,16 @@ export default class GameScene extends Phaser.Scene {
       // Update visual feedback based on resource levels
       const sunColorIntensity = Math.min(255, cell.sun * 80);
       const waterColorIntensity = Math.min(255, cell.water * 25);
-      const color = Phaser.Display.Color.GetColor(
-        sunColorIntensity,
-        100,
-        waterColorIntensity
-      );
+      // const color = Phaser.Display.Color.GetColor(
+      //   sunColorIntensity,
+      //   100,
+      //   waterColorIntensity
+      // );
+
+      const color = cell.water === 10 
+      ? Phaser.Display.Color.GetColor(0, 100, 255)  // Fixed color if water is at maximum
+      : Phaser.Display.Color.GetColor(sunColorIntensity, 100, waterColorIntensity);
+
       cell.rect.setFillStyle(color);
 
       // Log the updated values for debugging
