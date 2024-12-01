@@ -118,7 +118,7 @@ export default class GameScene extends Phaser.Scene {
   updateCellResources() {
     this.grid.forEach((cell) => {
       // Generate random sun and water levels
-      const sunGain = Phaser.Math.Between(0, 3); // Random sun between 0 and 3
+      const sunGain = Phaser.Math.Between(0, 6); // Random sun between 0 and 6
       const waterGain = Phaser.Math.Between(0, 2); // Random water between 0 and 2
 
       // Sun energy is used immediately or lost; it does not accumulate
@@ -148,12 +148,40 @@ export default class GameScene extends Phaser.Scene {
     this.grid.forEach((cell) => {
       if (cell.hasPlant) {
         // Increase the growth level if conditions are met
-        if (cell.water > 1 && cell.sun > 1) {
-          cell.growthLevel = Math.min(cell.growthLevel + 1, 3); // Cap the growth level at 3
-          console.log(`Plant at (${cell.x}, ${cell.y}) grew to level ${cell.growthLevel}`);
+        if(cell.plantType == 1 || cell.plantType == 2){
+          this.plantGrowth(1, 1, 1, 2, 2, cell);
+        } else if(cell.plantType == 3){
+          this.plantGrowth(3, 3, 3, 3, 1, cell);
         }
       }
     });
+  }
+
+  plantGrowth(waterReq, sunReq, plantReq1, plantReq2, neighborReq, cell){
+    if(cell.water > waterReq && cell.sun > sunReq && (cell.plantType == plantReq1 || cell.plantType == plantReq2) && cell.growthLevel < 5){
+      // Check nearby cells for the same plant type
+      let nearbyPlants = 0;
+      for(let i = -1; i < 2; i++){
+        for(let j = -1; j < 2; j++){
+          const tempCell = this.grid.find(
+          (tcell) => tcell.x === cell.x + 1 && tcell.y === cell.y + j);
+          if(tempCell != null && (tempCell.plantType == plantReq1 || tempCell.plantType == plantReq2)){
+            nearbyPlants += 1;
+          }
+        }
+      }
+      if((nearbyPlants - 1) >= neighborReq){
+        cell.growthLevel += 1;
+        // Update the plant sprite frame to represent the growth level
+        if(cell.plantType != 3){
+          cell.plantSprite.setFrame(cell.growthLevel);
+        } else{
+          cell.plantSprite.setFrame(6 + cell.growthLevel);
+        }
+
+        console.log(`Plant at (${cell.x}, ${cell.y}) grew to level ${cell.growthLevel}`);
+      }
+    }
   }
 
   reapPlant() {
@@ -163,6 +191,8 @@ export default class GameScene extends Phaser.Scene {
       playerCell.hasPlant = false; // Set the cell's plant status to false
       playerCell.plantType = null; // Clear plant type
       playerCell.growthLevel = 0; // Reset growth level
+      playerCell.water = 0; // Reset water level
+      playerCell.sun = 0; // Reset sun level
 
       if (playerCell.plantSprite) {
         playerCell.plantSprite.destroy(); // Remove the plant sprite
@@ -185,11 +215,22 @@ export default class GameScene extends Phaser.Scene {
       playerCell.rect.setFillStyle(0x8b4513); // Change the cell color to indicate a plant is present
 
       // Add a visual representation of the plant using a specific frame
-      playerCell.plantSprite = this.add.sprite(
-        playerCell.rect.x,
-        playerCell.rect.y,
-        'plant'
-      ).setScale(2); // Add a plant sprite and scale it down to fit in the cell
+      if(playerCell.plantType != 3){
+        playerCell.plantSprite = this.add.sprite(
+          playerCell.rect.x,
+          playerCell.rect.y,
+          'plant',
+          0
+        ).setScale(2); // Add a plant sprite and scale it down to fit in the cell
+
+      } else {
+        playerCell.plantSprite = this.add.sprite(
+          playerCell.rect.x,
+          playerCell.rect.y,
+          'plant',
+          6
+        ).setScale(2); // Add a plant sprite and scale it down to fit in the cell
+      }
 
       console.log(`Plant type ${playerCell.plantType} sown with growth level ${playerCell.growthLevel}`);
     } else {
