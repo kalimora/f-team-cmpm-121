@@ -64,7 +64,14 @@ export default class GameScene extends Phaser.Scene {
             0x057a26
           )
           .setStrokeStyle(2, 0x000000); // Set the outline color of the grid cell
-
+          // Add text to display sun and water levels (optional, for debugging)
+           //const _cellText = this.add.text(
+             //cellX - this.cellSize / 4,
+             //cellY - this.cellSize / 4,
+            //"S: 0\nW: 0", // Initial text with Sun and Water levels
+            //{ font: "14px Arial", fill: "#ffffff" }
+          //);
+          
         // Add cell to the grid array
         this.grid.push({ x, y, rect: cell, hasPlant: false, plantSprite: null, sun: 0, water: 0 });
       }
@@ -116,6 +123,16 @@ export default class GameScene extends Phaser.Scene {
       
       // Water accumulates over time, up to a maximum of 10
       cell.water = Math.min(cell.water + waterGain, 10); // Cap water at a maximum of 10 
+     
+      // Update visual feedback based on resource levels
+      const sunColorIntensity = Math.min(255, cell.sun * 80);
+      const waterColorIntensity = Math.min(255, cell.water * 25);
+      const color = Phaser.Display.Color.GetColor(
+        sunColorIntensity,
+        100,
+        waterColorIntensity
+      );
+      cell.rect.setFillStyle(color);
 
       // Log the updated values for debugging
       console.log(
