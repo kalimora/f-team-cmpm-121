@@ -71,7 +71,11 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 - Added a visual sprite for the plant that is a visual representation of the plant on the grid when sown.
 
 ### F0.d
-- 
+- We added sun and water levels to each grid cell in GameScene.js to simulate environmental conditions.
+- In GameScene.js, we created a function to update sun and water levels for each grid cell when the game time advances.
+- Sun energy is generated randomly each turn and is used immediately or lost, making sure it doesn’t carry over to the next turn.
+- Water, on the other hand, accumulates gradually over multiple turns, which allows cells to build up moisture over time.
+- We also set a maximum cap for water accumulation to keep the resource levels balanced within the game.
 
 ### F0.e
 - 
