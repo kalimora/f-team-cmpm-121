@@ -85,7 +85,10 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 Growth levels for each plant visually evolve based on sun and water resources, emphasizing the importance of environmental management by the player.
 
 ### F0.f - Celeste
-- 
+- I added growth conditions for the different plant types. They are based on the sun and water levels of the grid it is planted on, and how many of the same plant types are near them.
+- I updated the plant sprites to reflect the growth level and plant type so players can visualize the growth process.
+- I also adjusted sun levels to give the grids a larger range of possible values since sun levels aren't stored. Additionally, this gives more variety for growth conditions for the different plant types
+- Finall,y I updated the water values to reset after a plant has been reaped, that way the player starts with fresh soil when replanting.
 
 ## F0.g - Samina
 - 
