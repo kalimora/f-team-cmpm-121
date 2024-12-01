@@ -78,7 +78,11 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 - We also set a maximum cap for water accumulation to keep the resource levels balanced within the game.
 
 ### F0.e - Hasina
-- 
+- I introduced distinct plant types and growth levels into the game. Each plant on the grid now has a type (e.g., one of three species) and a growth level that progresses over time.
+- When sowing a plant, it is assigned a random type (from a predefined set of three) and starts with growth level 1. This adds diversity to the gameplay and differentiates how plants behave and evolve.
+- Growth levels are advanced based on the sun and water availability in the grid cell when the game time advances. The maximum growth level is capped at 3.
+- I updated the reap functionality to log the type and growth level of each plant, providing better player feedback on their actions.
+Growth levels for each plant visually evolve based on sun and water resources, emphasizing the importance of environmental management by the player.
 
 ### F0.f - Celeste
 - 

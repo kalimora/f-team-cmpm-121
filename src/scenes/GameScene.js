@@ -64,16 +64,19 @@ export default class GameScene extends Phaser.Scene {
             0x057a26
           )
           .setStrokeStyle(2, 0x000000); // Set the outline color of the grid cell
-          // Add text to display sun and water levels (optional, for debugging)
-           //const _cellText = this.add.text(
-             //cellX - this.cellSize / 4,
-             //cellY - this.cellSize / 4,
-            //"S: 0\nW: 0", // Initial text with Sun and Water levels
-            //{ font: "14px Arial", fill: "#ffffff" }
-          //);
-          
-        // Add cell to the grid array
-        this.grid.push({ x, y, rect: cell, hasPlant: false, plantSprite: null, sun: 0, water: 0 });
+
+        // Add cell to the grid array with new properties
+        this.grid.push({
+          x,
+          y,
+          rect: cell,
+          hasPlant: false,
+          plantSprite: null,
+          sun: 0,
+          water: 0,
+          plantType: null, // New property to store the plant type
+          growthLevel: 0,  // New property to store the growth level
+        });
       }
     }
   }
@@ -127,15 +130,9 @@ export default class GameScene extends Phaser.Scene {
       // Update visual feedback based on resource levels
       const sunColorIntensity = Math.min(255, cell.sun * 80);
       const waterColorIntensity = Math.min(255, cell.water * 25);
-      // const color = Phaser.Display.Color.GetColor(
-      //   sunColorIntensity,
-      //   100,
-      //   waterColorIntensity
-      // );
-
       const color = cell.water === 10 
-      ? Phaser.Display.Color.GetColor(0, 100, 255)  // Fixed color if water is at maximum
-      : Phaser.Display.Color.GetColor(sunColorIntensity, 100, waterColorIntensity);
+        ? Phaser.Display.Color.GetColor(0, 100, 255)  // Fixed color if water is at maximum
+        : Phaser.Display.Color.GetColor(sunColorIntensity, 100, waterColorIntensity);
 
       cell.rect.setFillStyle(color);
 
@@ -147,16 +144,26 @@ export default class GameScene extends Phaser.Scene {
   }
 
   handleTimeBasedEvents() {
-    // Example: Update resources, spawn enemies, change the environment
     console.log('Handling events for gameTime:', this.gameTime);
-    // Here you can implement any game logic that depends on time (e.g., enemy spawns, resource regeneration, environmental changes)
+    this.grid.forEach((cell) => {
+      if (cell.hasPlant) {
+        // Increase the growth level if conditions are met
+        if (cell.water > 1 && cell.sun > 1) {
+          cell.growthLevel = Math.min(cell.growthLevel + 1, 3); // Cap the growth level at 3
+          console.log(`Plant at (${cell.x}, ${cell.y}) grew to level ${cell.growthLevel}`);
+        }
+      }
+    });
   }
 
   reapPlant() {
     const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
     if (playerCell && playerCell.hasPlant) {
-      console.log(`Reaping plant at (${playerCell.x}, ${playerCell.y})`); // Log the action of reaping a plant
+      console.log(`Reaping plant at (${playerCell.x}, ${playerCell.y}) of type ${playerCell.plantType} and level ${playerCell.growthLevel}`); // Log the plant type and growth level
       playerCell.hasPlant = false; // Set the cell's plant status to false
+      playerCell.plantType = null; // Clear plant type
+      playerCell.growthLevel = 0; // Reset growth level
+
       if (playerCell.plantSprite) {
         playerCell.plantSprite.destroy(); // Remove the plant sprite
         playerCell.plantSprite = null; // Set the plant sprite reference to null
@@ -171,7 +178,10 @@ export default class GameScene extends Phaser.Scene {
     const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
     if (playerCell && !playerCell.hasPlant) {
       console.log(`Sowing plant at (${playerCell.x}, ${playerCell.y})`); // Log the action of sowing a plant
+      
       playerCell.hasPlant = true; // Set the cell's plant status to true
+      playerCell.plantType = Phaser.Math.Between(1, 3); // Randomly assign a plant type (1, 2, or 3)
+      playerCell.growthLevel = 1; // Start the plant at growth level 1
       playerCell.rect.setFillStyle(0x8b4513); // Change the cell color to indicate a plant is present
 
       // Add a visual representation of the plant using a specific frame
@@ -180,10 +190,12 @@ export default class GameScene extends Phaser.Scene {
         playerCell.rect.y,
         'plant'
       ).setScale(2); // Add a plant sprite and scale it down to fit in the cell
+
+      console.log(`Plant type ${playerCell.plantType} sown with growth level ${playerCell.growthLevel}`);
     } else {
       console.log('A plant is already here!'); // Log a message if there's already a plant in the cell
     }
-  }  
+  }
 
   getPlayerCell() {
     // Find the cell where the player is currently located
