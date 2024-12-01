@@ -25,7 +25,7 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 - **General:** https://cupnooble.itch.io/sprout-lands-asset-pack
 
 ## Documentation
-### F0.a
+### F0.a - Shea
 ```
 📦f-team-cmpm-121
  ┣ 📂.github
@@ -57,33 +57,33 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 - In the main scene (GameScene.js) I created logic for a 5x5 grid and an array to store the grid in. Values such as gridSize, cellSize, and gridOrgin can all be put into an interface down the line, for now, I am defining them as variables in create(). The actual grid is created by calling createGrid(). Update responds to keyboard input and interacts with the Player class to manipulate its movement accordingly.
 - I defined the class Player in Player.js which handles all logic for the player. The main part of this class is the move() and updatePosition() methods. The move function is designed to update the logical position of the player on the grid adding the change in x & y (deltaX & deltaY) to the player's current position. The method updatePositon is designed to update the visual position of the player.
 
-### F0.b
+### F0.b - Kaylee
 - I implemented the manual time advancement in the GameScene.js.
 - In GameScene.js, I created a button that when clicked, advances the game time. This is essential for simulating turn-based mechanics where players can strategize and plan their moves according to the game time.
 - In GameScene.js, I integrated a manual time control mechanism essential for our turn-based simulation. This feature allows players to advance the in-game time manually using a dedicated button, strategically influencing the game's state based on their decisions.
 - I added a visual indicator on the screen to show the current game time, updating it each time the player uses the button to advance time.
 
-### F0.c
+### F0.c - Samina
 - I implemented the ability for the player to reap and sow plants on grid cells in the GameScene.js.
 - In GameScene.js, I added keyboard controls (R key for reaping and S key for sowing) that allow players to interact with nearby grid cells to manage plants.
 - The player can only reap or sow plants when standing on the corresponding grid cell, ensuring close proximity for these actions.
 - Added visual indicators that change the color of a grid cell based on whether a plant is sown or reaped, providing feedback on the plant's status.
 - Added a visual sprite for the plant that is a visual representation of the plant on the grid when sown.
 
-### F0.d
+### F0.d - Group
 - We added sun and water levels to each grid cell in GameScene.js to simulate environmental conditions.
 - In GameScene.js, we created a function to update sun and water levels for each grid cell when the game time advances.
 - Sun energy is generated randomly each turn and is used immediately or lost, making sure it doesn’t carry over to the next turn.
 - Water, on the other hand, accumulates gradually over multiple turns, which allows cells to build up moisture over time.
 - We also set a maximum cap for water accumulation to keep the resource levels balanced within the game.
 
-### F0.e
+### F0.e - Hasina
 - 
 
-### F0.f
+### F0.f - Celeste
 - 
 
-## F0.g
+## F0.g - Samina
 - 
 
 Feel free to adapt this file as we change our objectives!
