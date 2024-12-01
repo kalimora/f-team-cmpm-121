@@ -66,7 +66,7 @@ export default class GameScene extends Phaser.Scene {
           .setStrokeStyle(2, 0x000000);
 
         // Add cell to the grid array
-        this.grid.push({ x, y, rect: cell, hasPlant: false, plantSprite: null });
+        this.grid.push({ x, y, rect: cell, hasPlant: false, plantSprite: null, sun:0, water:0 });
       }
     }
   }
@@ -99,9 +99,26 @@ export default class GameScene extends Phaser.Scene {
   advanceTime() {
     this.gameTime += 1; // Increment the game's time counter by one unit
     console.log('Time advanced to: ' + this.gameTime);
+    this.updateCellResources(); // Update sun and water levels
     this.handleTimeBasedEvents(); // Call a method to handle events that occur due to time advancement
     // Log a specific message when the button is clicked
     console.log(`Button clicked at gameTime: ${this.gameTime}`);
+  }
+  
+  updateCellResources() {
+    this.grid.forEach((cell) => {
+      // Generate random sun and water levels
+      const sunGain = Phaser.Math.Between(0, 3); // optional: Random sun between 0 and 3
+      const waterGain = Phaser.Math.Between(0, 2); //optional: Random water between 0 and 2
+  
+      cell.sun = sunGain; 
+      cell.water = Math.min(cell.water + waterGain, 10); // Cap water at a maximum of 10 
+  
+      // Log the updated values
+      console.log(
+        `Cell (${cell.x}, ${cell.y}) - Sun: ${cell.sun}, Water: ${cell.water}`
+      );
+    });
   }
 
   handleTimeBasedEvents() {
