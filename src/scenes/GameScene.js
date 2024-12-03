@@ -259,7 +259,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.grid.forEach((cell) => {
       if (cell.hasPlant && cell.growthLevel >= requiredGrowthLevel) {
-        count += 1;
+        count++;
       }
     });
 
