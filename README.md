@@ -94,4 +94,42 @@ Growth levels for each plant visually evolve based on sun and water resources, e
 - I added a condition to complete the play scenario when enough plants reach a certain growth level in GameScene.js.
 - I also implemented a check that tracks if the play scenario is completed, ensuring it only triggers once to avoid loops.
 
+
+### Reflection
+
+Looking back on how we achieved the F0 requirements, our team's plan changed a lot in several ways:
+
+1. **Tools and Technologies**:
+We started with Phaser and thought our JavaScript skills would be enough. But we quickly realized that integrating everything needed better collaboration tools. We used VS Code for coding, GitHub for version control and reviews, and Discord for regular meetings and discussions. These tools helped us manage updates from multiple team members without conflicts. Kaylee was crucial in setting up these tools and guiding everyone on how to use them effectively.
+
+2. **Changing Team Roles**:
+At first, we had specific roles like Tools Lead, Engine Lead, and Design Lead. As the project progressed, we found that our roles often overlapped, so we became more flexible:
+- We started doing pair programming and had more group discussions, especially for complex features like plant growth logic and time advancement.
+- **Role Adjustments**: For example, Celeste and Hasina worked together on plant growth and visuals, while Samina and Shea worked on reaping and sowing actions for the player.
+
+3. **Refactoring and Iterative Development**:
+Initially, we focused on getting the core features done quickly. As we moved forward, we realized the need for refactoring to keep the code clean and organized. We followed DRY principles to avoid repeated code and created utility functions. Kaylee also helped set up coding guidelines to make refactoring smoother. We worked in iterations: starting with something simple, testing it, and then improving. For example, we consolidated scattered sun and water updates into reusable methods.
+
+4. **Simplifying the Growth Mechanism**:
+Our original idea for plant growth was too complicated, with too many types of plants and conditions. It became overwhelming, so we simplified it:
+- We reduced the plant types to three and kept the growth logic consistent for all, with minor variations based on sun and water. This made it easier to manage while keeping some variety.
+
+5. **Scenario Completion Goals**:
+We initially wanted multiple ways to complete the game, but it made coding and testing difficult. We simplified it to one condition: having enough plants reach a specific growth level. This made it easier to meet the F0 requirements and gave players a clear objective.
+
+6. **Addressing Code Duplication**:
+We noticed a lot of repetitive code, especially for managing plant types and growth. We refactored this into utility functions to make the code cleaner. For example, checking nearby plant count for growth was repeated, so we made it a utility function. We also refactored functions for updating resource levels in grid cells.
+
+7. **Embracing Iterative Planning**:
+At first, we tried to complete each feature entirely before moving on to the next. We learned that it was better to work on small, testable parts, then review and improve them before continuing. This made the code easier to manage and helped us address issues without dealing with large, complex chunks of work.
+
+### Key Takeaways
+- We used collaboration tools like VS Code, GitHub, and Discord to keep our development process smooth.
+- Pair programming and flexible roles helped us solve problems faster and share knowledge across the team.
+- We scaled back our original ambitions for plant types and game conditions to focus on a playable version that met the F0 requirements.
+- Refactoring and DRY principles kept our code cleaner and easier to maintain.
+
+Overall, we shifted our approach to focus on simplicity, collaboration, and iteration. This helped us meet the F0 requirements effectively and build a strong foundation for future improvements.
+
+
 Feel free to adapt this file as we change our objectives!
