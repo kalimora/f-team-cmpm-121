@@ -88,9 +88,10 @@ Growth levels for each plant visually evolve based on sun and water resources, e
 - I added growth conditions for the different plant types. They are based on the sun and water levels of the grid it is planted on, and how many of the same plant types are near them.
 - I updated the plant sprites to reflect the growth level and plant type so players can visualize the growth process.
 - I also adjusted sun levels to give the grids a larger range of possible values since sun levels aren't stored. Additionally, this gives more variety for growth conditions for the different plant types
-- Finall,y I updated the water values to reset after a plant has been reaped, that way the player starts with fresh soil when replanting.
+- Finally, I updated the water values to reset after a plant has been reaped, that way the player starts with fresh soil when replanting.
 
 ## F0.g - Samina
-- 
+- I added a condition to complete the play scenario when enough plants reach a certain growth level in GameScene.js.
+- I also implemented a check that tracks if the play scenario is completed, ensuring it only triggers once to avoid loops.
 
 Feel free to adapt this file as we change our objectives!

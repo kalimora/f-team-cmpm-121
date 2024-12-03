@@ -4,6 +4,7 @@ export default class GameScene extends Phaser.Scene {
   constructor() {
     super("gameScene");
     this.gameTime = 0; // Initialize gameTime to track game time
+    this.playScenarioCompleted = false; // Track if the play scenario has been completed
   }
 
   create() {
@@ -103,6 +104,11 @@ export default class GameScene extends Phaser.Scene {
       this.player.gridY < this.gridSize - 1
     ) {
       this.player.move(0, 1); // Move player down
+    }
+
+    // Check if play scenario is completed
+    if (!this.playScenarioCompleted) {
+      this.checkPlayScenarioCompletion();
     }
   }
 
@@ -243,5 +249,23 @@ export default class GameScene extends Phaser.Scene {
     return this.grid.find(
       (cell) => cell.x === this.player.gridX && cell.y === this.player.gridY
     );
+  }
+
+  checkPlayScenarioCompletion() {
+    // Condition for completing the play scenario (e.g. at least  plants at growth level Y or above)
+    const requiredGrowthLevel = 3; // Define the minimum growth level requirement
+    const requiredPlantCount = 5; // Define the minimum number of plants required at the growth level
+    let count = 0;
+
+    this.grid.forEach((cell) => {
+      if (cell.hasPlant && cell.growthLevel >= requiredGrowthLevel) {
+        count += 1;
+      }
+    });
+
+    if (count >= requiredPlantCount) {
+      console.log(`Play scenario completed! ${count} plants have reached growth level ${requiredGrowthLevel} or above.`);
+      this.playScenarioCompleted = true; // Mark the play scenario as completed
+    }
   }
 }
