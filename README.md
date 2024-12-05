@@ -131,5 +131,11 @@ At first, we tried to complete each feature entirely before moving on to the nex
 
 Overall, we shifted our approach to focus on simplicity, collaboration, and iteration. This helped us meet the F0 requirements effectively and build a strong foundation for future improvements.
 
+### F1.a - Everyone
 
+### F1.b - Kaylee
+- I made a saveGame function to save the game, player position, and plant data.
+- I made a loadGame function to get back all of the saved data after the player activates the saveGame function.
+- I made sure that the sprites and growth levels did not get overwritten with an updateGridVisuals function.
+  
 Feel free to adapt this file as we change our objectives!
