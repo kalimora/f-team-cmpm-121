@@ -1,5 +1,4 @@
 import Player from "../objects/Player.js";
-
 class GridState {
   constructor(gridSize) {
     this.gridSize = gridSize;
