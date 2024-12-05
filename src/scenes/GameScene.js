@@ -1,10 +1,73 @@
 import Player from "../objects/Player.js";
 
+class GridState {
+  constructor(gridSize) {
+    this.gridSize = gridSize;
+    this.byteArray = new Uint8Array(gridSize * gridSize * 4); // Initialize the byte array with 4 bytes per cell
+  }
+
+  // Get the value at a specific grid position
+  getValue(x, y, offset) {
+    return this.byteArray[(y * this.gridSize + x) * 4 + offset];
+  }
+
+  // Set the value at a specific grid position
+  setValue(x, y, offset, value) {
+    this.byteArray[(y * this.gridSize + x) * 4 + offset] = value;
+  }
+
+  // Get sun level at a specific grid position
+  getSunLevel(x, y) {
+    return this.getValue(x, y, 0);
+  }
+
+  // Set sun level at a specific grid position
+  setSunLevel(x, y, value) {
+    this.setValue(x, y, 0, value);
+  }
+
+  // Get water level at a specific grid position
+  getWaterLevel(x, y) {
+    return this.getValue(x, y, 1);
+  }
+
+  // Set water level at a specific grid position
+  setWaterLevel(x, y, value) {
+    this.setValue(x, y, 1, value);
+  }
+
+  // Get plant type at a specific grid position
+  getPlantType(x, y) {
+    return this.getValue(x, y, 2);
+  }
+
+  // Set plant type at a specific grid position
+  setPlantType(x, y, value) {
+    this.setValue(x, y, 2, value);
+  }
+
+  // Get growth level at a specific grid position
+  getGrowthLevel(x, y) {
+    return this.getValue(x, y, 3);
+  }
+
+  // Set growth level at a specific grid position
+  setGrowthLevel(x, y, value) {
+    this.setValue(x, y, 3, value);
+  }
+
+  // Clear the grid
+  clear() {
+    this.byteArray.fill(0);
+  }
+}
+
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super("gameScene");
     this.gameTime = 0; // Initialize gameTime to track game time
     this.playScenarioCompleted = false; // Track if the play scenario has been completed
+    this.gridState = new GridState(5); // Create a new GridState instance for the 5x5 grid
   }
 
   create() {
@@ -20,7 +83,7 @@ export default class GameScene extends Phaser.Scene {
     // Set up keyboard input
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    // Grid setup (might want to put this into an init() function or interface later)
+    // Grid setup (visual representation)
     this.gridSize = 5; // 5x5 grid
     this.cellSize = 100; // Size of each grid cell
     const gridPixelSize = this.gridSize * this.cellSize;
@@ -28,7 +91,6 @@ export default class GameScene extends Phaser.Scene {
       x: (this.game.config.width - gridPixelSize) / 2 + this.cellSize / 2,
       y: (this.game.config.height - gridPixelSize) / 2 + this.cellSize / 2,
     }; // Starting position of the grid
-    this.grid = []; // Store grid cells
 
     this.createGrid(); // Create the grid
 
@@ -40,16 +102,14 @@ export default class GameScene extends Phaser.Scene {
       "player"
     );
 
-    // Set up keyboard input for player movement
-    this.cursors = this.input.keyboard.createCursorKeys();
-
     // Set up reap and sow actions
     this.input.keyboard.on('keydown-R', () => this.reapPlant()); // Reap a plant when 'R' key is pressed
     this.input.keyboard.on('keydown-S', () => this.sowPlant()); // Sow a plant when 'S' key is pressed
   }
 
   createGrid() {
-    // Create a 5x5 grid of rectangles
+    // Create a 5x5 grid of rectangles for visual representation
+    this.grid = [];
     for (let y = 0; y < this.gridSize; y++) {
       for (let x = 0; x < this.gridSize; x++) {
         const cellX = this.gridOrigin.x + x * this.cellSize;
@@ -66,18 +126,8 @@ export default class GameScene extends Phaser.Scene {
           )
           .setStrokeStyle(2, 0x000000); // Set the outline color of the grid cell
 
-        // Add cell to the grid array with new properties
-        this.grid.push({
-          x,
-          y,
-          rect: cell,
-          hasPlant: false,
-          plantSprite: null,
-          sun: 0,
-          water: 0,
-          plantType: null, // New property to store the plant type
-          growthLevel: 0,  // New property to store the growth level
-        });
+        // Add cell to the grid array for reference
+        this.grid.push({ x, y, rect: cell });
       }
     }
   }
@@ -115,90 +165,112 @@ export default class GameScene extends Phaser.Scene {
   advanceTime() {
     this.gameTime += 1; // Increment the game's time counter by one unit
     console.log('Time advanced to: ' + this.gameTime);
+    //(Delete before turning in, only keeping to see if byte array updates)
+    console.log('Current Byte Array:', this.gridState.byteArray); // Print the byte array to check updates
     this.updateCellResources(); // Update sun and water levels for each grid cell
     this.handleTimeBasedEvents(); // Call a method to handle events that occur due to time advancement
-    // Log a specific message when the button is clicked
-    console.log(`Button clicked at gameTime: ${this.gameTime}`);
   }
 
   updateCellResources() {
-    this.grid.forEach((cell) => {
-      // Generate random sun and water levels
-      const sunGain = Phaser.Math.Between(0, 6); // Random sun between 0 and 6
-      const waterGain = Phaser.Math.Between(0, 2); // Random water between 0 and 2
+    for (let y = 0; y < this.gridSize; y++) {
+      for (let x = 0; x < this.gridSize; x++) {
+        // Generate random sun and water levels
+        const sunGain = Phaser.Math.Between(0, 6); // Random sun between 0 and 6
+        const waterGain = Phaser.Math.Between(0, 2); // Random water between 0 and 2
 
-      // Sun energy is used immediately or lost; it does not accumulate
-      cell.sun = sunGain;
-      
-      // Water accumulates over time, up to a maximum of 10
-      cell.water = Math.min(cell.water + waterGain, 10); // Cap water at a maximum of 10 
-     
-      // Update visual feedback based on resource levels
-      const sunColorIntensity = Math.min(255, cell.sun * 80);
-      const waterColorIntensity = Math.min(255, cell.water * 25);
-      const color = cell.water === 10 
-        ? Phaser.Display.Color.GetColor(0, 100, 255)  // Fixed color if water is at maximum
-        : Phaser.Display.Color.GetColor(sunColorIntensity, 100, waterColorIntensity);
+        // Update the byte array with new values
+        this.gridState.setSunLevel(x, y, sunGain);
+        this.gridState.setWaterLevel(x, y, Math.min(this.gridState.getWaterLevel(x, y) + waterGain, 10));
 
-      cell.rect.setFillStyle(color);
+        // Update visual feedback based on resource levels
+        const sunColorIntensity = Math.min(255, sunGain * 80);
+        const waterColorIntensity = Math.min(255, this.gridState.getWaterLevel(x, y) * 25);
+        const color = this.gridState.getWaterLevel(x, y) === 10
+          ? Phaser.Display.Color.GetColor(0, 100, 255)  // Fixed color if water is at maximum
+          : Phaser.Display.Color.GetColor(sunColorIntensity, 100, waterColorIntensity);
 
-      // Log the updated values for debugging
-      console.log(
-        `Cell (${cell.x}, ${cell.y}) - Sun: ${cell.sun}, Water: ${cell.water}`
-      );
-    });
+        const cell = this.grid.find(c => c.x === x && c.y === y);
+        if (cell) {
+          cell.rect.setFillStyle(color);
+        }
+      }
+    }
   }
 
   handleTimeBasedEvents() {
     console.log('Handling events for gameTime:', this.gameTime);
-    this.grid.forEach((cell) => {
-      if (cell.hasPlant) {
-        // Increase the growth level if conditions are met
-        if(cell.plantType == 1 || cell.plantType == 2){
-          this.plantGrowth(1, 1, 1, 2, 2, cell);
-        } else if(cell.plantType == 3){
-          this.plantGrowth(3, 3, 3, 3, 1, cell);
-        }
-      }
-    });
-  }
-
-  plantGrowth(waterReq, sunReq, plantReq1, plantReq2, neighborReq, cell){
-    if(cell.water > waterReq && cell.sun > sunReq && (cell.plantType == plantReq1 || cell.plantType == plantReq2) && cell.growthLevel < 5){
-      // Check nearby cells for the same plant type
-      let nearbyPlants = 0;
-      for(let i = -1; i < 2; i++){
-        for(let j = -1; j < 2; j++){
-          const tempCell = this.grid.find(
-          (tcell) => tcell.x === cell.x + 1 && tcell.y === cell.y + j);
-          if(tempCell != null && (tempCell.plantType == plantReq1 || tempCell.plantType == plantReq2)){
-            nearbyPlants += 1;
+    for (let y = 0; y < this.gridSize; y++) {
+      for (let x = 0; x < this.gridSize; x++) {
+        const plantType = this.gridState.getPlantType(x, y);
+        if (plantType !== 0) {
+          // Adjust growth logic for different plant types
+          if (plantType === 1 || plantType === 2) {
+            this.plantGrowth(1, 1, 1, 2, 2, x, y);
+          } else if (plantType === 3) {
+            this.plantGrowth(2, 3, 3, 3, 1, x, y); // Different growth conditions for plant type 3
           }
         }
       }
-      if((nearbyPlants - 1) >= neighborReq){
-        cell.growthLevel += 1;
+    }
+  }
+
+  plantGrowth(waterReq, sunReq, plantReq1, plantReq2, neighborReq, x, y) {
+    if (
+      this.gridState.getWaterLevel(x, y) > waterReq &&
+      this.gridState.getSunLevel(x, y) > sunReq &&
+      (this.gridState.getPlantType(x, y) === plantReq1 || this.gridState.getPlantType(x, y) === plantReq2) &&
+      this.gridState.getGrowthLevel(x, y) < 5
+    ) {
+      // Check nearby cells for the same plant type
+      let nearbyPlants = 0;
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          if (i === 0 && j === 0) continue;
+          const neighborX = x + i;
+          const neighborY = y + j;
+          if (
+            neighborX >= 0 &&
+            neighborX < this.gridSize &&
+            neighborY >= 0 &&
+            neighborY < this.gridSize &&
+            (this.gridState.getPlantType(neighborX, neighborY) === plantReq1 ||
+              this.gridState.getPlantType(neighborX, neighborY) === plantReq2)
+          ) {
+            nearbyPlants++;
+          }
+        }
+      }
+      if (nearbyPlants >= neighborReq) {
+        this.gridState.setGrowthLevel(x, y, this.gridState.getGrowthLevel(x, y) + 1);
+
         // Update the plant sprite frame to represent the growth level
-        if(cell.plantType != 3){
-          cell.plantSprite.setFrame(cell.growthLevel);
-        } else{
-          cell.plantSprite.setFrame(6 + cell.growthLevel);
+        const cell = this.grid.find((c) => c.x === x && c.y === y);
+        if (cell && cell.plantSprite) {
+          cell.plantSprite.setFrame(
+            this.gridState.getPlantType(x, y) !== 3
+              ? this.gridState.getGrowthLevel(x, y)
+              : 6 + this.gridState.getGrowthLevel(x, y)
+          );
         }
 
-        console.log(`Plant at (${cell.x}, ${cell.y}) grew to level ${cell.growthLevel}`);
+        console.log(`Plant at (${x}, ${y}) grew to level ${this.gridState.getGrowthLevel(x, y)}`);
       }
     }
   }
 
   reapPlant() {
     const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
-    if (playerCell && playerCell.hasPlant) {
-      console.log(`Reaping plant at (${playerCell.x}, ${playerCell.y}) of type ${playerCell.plantType} and level ${playerCell.growthLevel}`); // Log the plant type and growth level
-      playerCell.hasPlant = false; // Set the cell's plant status to false
-      playerCell.plantType = null; // Clear plant type
-      playerCell.growthLevel = 0; // Reset growth level
-      playerCell.water = 0; // Reset water level
-      playerCell.sun = 0; // Reset sun level
+    if (playerCell && this.gridState.getPlantType(playerCell.x, playerCell.y) !== 0) {
+      console.log(
+        `Reaping plant at (${playerCell.x}, ${playerCell.y}) of type ${this.gridState.getPlantType(
+          playerCell.x,
+          playerCell.y
+        )} and level ${this.gridState.getGrowthLevel(playerCell.x, playerCell.y)}`
+      );
+      this.gridState.setPlantType(playerCell.x, playerCell.y, 0); // Clear plant type
+      this.gridState.setGrowthLevel(playerCell.x, playerCell.y, 0); // Reset growth level
+      this.gridState.setWaterLevel(playerCell.x, playerCell.y, 0); // Reset water level
+      this.gridState.setSunLevel(playerCell.x, playerCell.y, 0); // Reset sun level
 
       if (playerCell.plantSprite) {
         playerCell.plantSprite.destroy(); // Remove the plant sprite
@@ -212,33 +284,29 @@ export default class GameScene extends Phaser.Scene {
 
   sowPlant() {
     const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
-    if (playerCell && !playerCell.hasPlant) {
+    if (playerCell && this.gridState.getPlantType(playerCell.x, playerCell.y) === 0) {
       console.log(`Sowing plant at (${playerCell.x}, ${playerCell.y})`); // Log the action of sowing a plant
-      
-      playerCell.hasPlant = true; // Set the cell's plant status to true
-      playerCell.plantType = Phaser.Math.Between(1, 3); // Randomly assign a plant type (1, 2, or 3)
-      playerCell.growthLevel = 1; // Start the plant at growth level 1
+
+      this.gridState.setPlantType(playerCell.x, playerCell.y, Phaser.Math.Between(1, 3)); // Randomly assign a plant type (1, 2, or 3)
+      this.gridState.setGrowthLevel(playerCell.x, playerCell.y, 1); // Start the plant at growth level 1
       playerCell.rect.setFillStyle(0x8b4513); // Change the cell color to indicate a plant is present
 
       // Add a visual representation of the plant using a specific frame
-      if(playerCell.plantType != 3){
-        playerCell.plantSprite = this.add.sprite(
+      playerCell.plantSprite = this.add
+        .sprite(
           playerCell.rect.x,
           playerCell.rect.y,
           'plant',
-          0
-        ).setScale(2); // Add a plant sprite and scale it down to fit in the cell
+          this.gridState.getPlantType(playerCell.x, playerCell.y) !== 3 ? 0 : 6
+        )
+        .setScale(2); // Add a plant sprite and scale it down to fit in the cell
 
-      } else {
-        playerCell.plantSprite = this.add.sprite(
-          playerCell.rect.x,
-          playerCell.rect.y,
-          'plant',
-          6
-        ).setScale(2); // Add a plant sprite and scale it down to fit in the cell
-      }
-
-      console.log(`Plant type ${playerCell.plantType} sown with growth level ${playerCell.growthLevel}`);
+      console.log(
+        `Plant type ${this.gridState.getPlantType(playerCell.x, playerCell.y)} sown with growth level ${this.gridState.getGrowthLevel(
+          playerCell.x,
+          playerCell.y
+        )}`
+      );
     } else {
       console.log('A plant is already here!'); // Log a message if there's already a plant in the cell
     }
@@ -252,19 +320,26 @@ export default class GameScene extends Phaser.Scene {
   }
 
   checkPlayScenarioCompletion() {
-    // Condition for completing the play scenario (e.g. at least  plants at growth level Y or above)
+    // Condition for completing the play scenario (e.g. at least 5 plants at growth level 3 or above)
     const requiredGrowthLevel = 3; // Define the minimum growth level requirement
     const requiredPlantCount = 5; // Define the minimum number of plants required at the growth level
     let count = 0;
 
-    this.grid.forEach((cell) => {
-      if (cell.hasPlant && cell.growthLevel >= requiredGrowthLevel) {
-        count++;
+    for (let y = 0; y < this.gridSize; y++) {
+      for (let x = 0; x < this.gridSize; x++) {
+        if (
+          this.gridState.getPlantType(x, y) !== 0 &&
+          this.gridState.getGrowthLevel(x, y) >= requiredGrowthLevel
+        ) {
+          count++;
+        }
       }
-    });
+    }
 
     if (count >= requiredPlantCount) {
-      console.log(`Play scenario completed! ${count} plants have reached growth level ${requiredGrowthLevel} or above.`);
+      console.log(
+        `Play scenario completed! ${count} plants have reached growth level ${requiredGrowthLevel} or above.`
+      );
       this.playScenarioCompleted = true; // Mark the play scenario as completed
     }
   }
