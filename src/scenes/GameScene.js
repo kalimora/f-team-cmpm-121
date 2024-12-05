@@ -68,6 +68,7 @@ export default class GameScene extends Phaser.Scene {
     this.gameTime = 0; // Initialize gameTime to track game time
     this.playScenarioCompleted = false; // Track if the play scenario has been completed
     this.gridState = new GridState(5); // Create a new GridState instance for the 5x5 grid
+    this.isLoadingGame = false; // Flag to indicate if we are loading a saved game
   }
 
   create() {
@@ -78,7 +79,10 @@ export default class GameScene extends Phaser.Scene {
     this.add.text(titleX, buttonY - 65, 'Advance Time', { font: '16px Arial', fill: '#ffffff' });
     this.timeButton = this.add.image(buttonX, buttonY, 'timeAdvanceButton')
         .setInteractive()
-        .on('pointerdown', () => this.advanceTime()); // Set up a button to advance game time
+        .on('pointerdown', () => {
+          this.advanceTime();
+          this.checkPlayScenarioCompletion(); // Check if scenario is completed after advancing time
+        }); // Set up a button to advance game time
 
     // Set up keyboard input
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -103,8 +107,34 @@ export default class GameScene extends Phaser.Scene {
     );
 
     // Set up reap and sow actions
-    this.input.keyboard.on('keydown-R', () => this.reapPlant()); // Reap a plant when 'R' key is pressed
-    this.input.keyboard.on('keydown-S', () => this.sowPlant()); // Sow a plant when 'S' key is pressed
+    this.input.keyboard.on('keydown-R', () => {
+      this.reapPlant();
+      this.checkPlayScenarioCompletion(); // Check if scenario is completed after reaping
+      this.autoSaveGame();
+    }); // Reap a plant when 'R' key is pressed
+    this.input.keyboard.on('keydown-S', () => {
+      this.sowPlant();
+      this.checkPlayScenarioCompletion(); // Check if scenario is completed after sowing
+      this.autoSaveGame();
+    }); // Sow a plant when 'S' key is pressed
+
+    // Set up player movement
+    this.input.keyboard.on('keydown', (event) => {
+      if (event.code === 'ArrowLeft' && this.player.gridX > 0) {
+        this.player.move(-1, 0); // Move player left
+        this.autoSaveGame();
+      } else if (event.code === 'ArrowRight' && this.player.gridX < this.gridSize - 1) {
+        this.player.move(1, 0); // Move player right
+        this.autoSaveGame();
+      } else if (event.code === 'ArrowUp' && this.player.gridY > 0) {
+        this.player.move(0, -1); // Move player up
+        this.autoSaveGame();
+      } else if (event.code === 'ArrowDown' && this.player.gridY < this.gridSize - 1) {
+        this.player.move(0, 1); // Move player down
+        this.autoSaveGame();
+      }
+    });
+
     // Add explanation text for save/load functionality
     const explanationText = `
 Press 1-5 to save to a slot.
@@ -113,26 +143,91 @@ Press Shift + 1-5 to load from a slot.
 
     this.add.text(550, 1, explanationText, { font: '16px Arial', fill: '#ffffff', wordWrap: { width: 400 } });
 
-   // Map keys for saving/loading
-   this.input.keyboard.on('keydown', (event) => {
-    if (!event.shiftKey) {
-        // Save slots (1-5)
-        if (event.code === 'Digit1') this.saveGame(1);
-        if (event.code === 'Digit2') this.saveGame(2);
-        if (event.code === 'Digit3') this.saveGame(3);
-        if (event.code === 'Digit4') this.saveGame(4);
-        if (event.code === 'Digit5') this.saveGame(5);
-    } else {
-        // Load slots (Shift + 1-5)
-        if (event.code === 'Digit1') this.loadGame(1);
-        if (event.code === 'Digit2') this.loadGame(2);
-        if (event.code === 'Digit3') this.loadGame(3);
-        if (event.code === 'Digit4') this.loadGame(4);
-        if (event.code === 'Digit5') this.loadGame(5);
-    }
-  });
-}
-    
+    // Map keys for saving/loading
+    this.input.keyboard.on('keydown', (event) => {
+      if (!event.shiftKey) {
+          // Save slots (1-5)
+          if (event.code === 'Digit1') this.saveGame(1);
+          if (event.code === 'Digit2') this.saveGame(2);
+          if (event.code === 'Digit3') this.saveGame(3);
+          if (event.code === 'Digit4') this.saveGame(4);
+          if (event.code === 'Digit5') this.saveGame(5);
+      } else {
+          // Load slots (Shift + 1-5)
+          if (event.code === 'Digit1') this.loadGame(1);
+          if (event.code === 'Digit2') this.loadGame(2);
+          if (event.code === 'Digit3') this.loadGame(3);
+          if (event.code === 'Digit4') this.loadGame(4);
+          if (event.code === 'Digit5') this.loadGame(5);
+      }
+    });
+
+    // Load auto-save if available
+    this.checkForAutoSave();
+
+    // Create an "Instructions" button
+    const buttonA = this.game.config.width - 150;
+    const buttonB = 50;
+
+    this.instructionsButton = this.add.text(buttonA, buttonB, 'Instructions', {
+      font: '18px Arial',
+      fill: '#ffffff',
+      backgroundColor: '#0000ff',
+      padding: { x: 10, y: 5 },
+    }).setInteractive().on('pointerdown', () => {
+      this.showInstructionsPopup();
+    });
+  }
+
+  showInstructionsPopup() {
+    // Create a semi-transparent background for the pop-up
+    this.popupBackground = this.add.rectangle(
+      this.game.config.width / 2,
+      this.game.config.height / 2,
+      this.game.config.width * 0.8,
+      this.game.config.height * 0.8,
+      0x000000,
+      0.8
+    );
+  
+    // Add instructions text
+    const instructionsText = `
+      Instructions:
+  
+      - Arrow Keys: Move Character
+      - S: Sow a plant at the current position
+      - R: Reap a plant at the current position
+      - 1-5: Save game to a slot
+      - Shift + 1-5: Load game from a slot
+      - Advance Time Button: Manually advance game time
+  
+      Click [Close] to close the instructions.
+    `;
+  
+    this.instructionsContent = this.add.text(
+      this.game.config.width / 2 - 200,
+      this.game.config.height / 2 - 150,
+      instructionsText,
+      { font: '18px Arial', fill: '#ffffff', wordWrap: { width: 400 } }
+    );
+  
+    // Add a "Close" button
+    this.closeButton = this.add.text(
+      this.game.config.width / 2 - 40,
+      this.game.config.height / 2 + 150,
+      '[Close]',
+      { font: '20px Arial', fill: '#ff0000' }
+    ).setInteractive().on('pointerdown', () => {
+      this.hideInstructionsPopup();
+    });
+  }
+  
+  hideInstructionsPopup() {
+    // Destroy all pop-up components
+    if (this.popupBackground) this.popupBackground.destroy();
+    if (this.instructionsContent) this.instructionsContent.destroy();
+    if (this.closeButton) this.closeButton.destroy();
+  }
 
   createGrid() {
     // Create a 5x5 grid of rectangles for visual representation
@@ -159,43 +254,180 @@ Press Shift + 1-5 to load from a slot.
     }
   }
 
-  update() {
-    // Handle player movement using arrow keys
-    if (
-      Phaser.Input.Keyboard.JustDown(this.cursors.left) &&
-      this.player.gridX > 0
-    ) {
-      this.player.move(-1, 0); // Move player left
-    } else if (
-      Phaser.Input.Keyboard.JustDown(this.cursors.right) &&
-      this.player.gridX < this.gridSize - 1
-    ) {
-      this.player.move(1, 0); // Move player right
-    } else if (
-      Phaser.Input.Keyboard.JustDown(this.cursors.up) &&
-      this.player.gridY > 0
-    ) {
-      this.player.move(0, -1); // Move player up
-    } else if (
-      Phaser.Input.Keyboard.JustDown(this.cursors.down) &&
-      this.player.gridY < this.gridSize - 1
-    ) {
-      this.player.move(0, 1); // Move player down
-    }
-
-    // Check if play scenario is completed
-    if (!this.playScenarioCompleted) {
-      this.checkPlayScenarioCompletion();
+  checkForAutoSave() {
+    const autoSaveState = localStorage.getItem('autoSave');
+    if (autoSaveState) {
+      const continueGame = window.confirm("Do you want to continue where you left off?");
+      if (continueGame) {
+        this.loadGame('autoSave');
+      }
     }
   }
 
+  autoSaveGame() {
+    const gameState = {
+      gridState: Array.from(this.gridState.byteArray), // Convert byte array to regular array for JSON compatibility
+      gameTime: this.gameTime,
+      playerPosition: { x: this.player.gridX, y: this.player.gridY },
+      plants: this.collectPlantData(),
+    };
+    localStorage.setItem('autoSave', JSON.stringify(gameState));
+    console.log('Game auto-saved');
+  }
+
+  collectPlantData() {
+    const plants = [];
+    for (let y = 0; y < this.gridSize; y++) {
+      for (let x = 0; x < this.gridSize; x++) {
+        const plantType = this.gridState.getPlantType(x, y);
+        const growthLevel = this.gridState.getGrowthLevel(x, y);
+        const waterLevel = this.gridState.getWaterLevel(x, y);
+        const sunLevel = this.gridState.getSunLevel(x, y);
+        if (plantType !== 0) {
+          plants.push({ x, y, plantType, growthLevel, waterLevel, sunLevel });
+        }
+      }
+    }
+    return plants;
+  }
+
+  saveGame(slot) {
+    const gameState = {
+      gridState: Array.from(this.gridState.byteArray), // Convert byte array to regular array for JSON compatibility
+      gameTime: this.gameTime,
+      playerPosition: { x: this.player.gridX, y: this.player.gridY },
+      plants: this.collectPlantData(),
+    };
+    localStorage.setItem(`saveSlot${slot}`, JSON.stringify(gameState));
+    console.log(`Game saved to slot ${slot}`);
+  }
+
+  loadGame(slot) {
+    const savedState = localStorage.getItem(slot === 'autoSave' ? 'autoSave' : `saveSlot${slot}`);
+    if (savedState) {
+      const gameState = JSON.parse(savedState);
+
+      // Set loading flag to true
+      this.isLoadingGame = true;
+
+      // Restore grid state
+      this.gridState.byteArray.set(gameState.gridState);
+
+      // Restore game variables
+      this.gameTime = gameState.gameTime;
+      this.player.gridX = gameState.playerPosition.x;
+      this.player.gridY = gameState.playerPosition.y;
+
+      // Clear existing sprites
+      this.grid.forEach((cell) => {
+        if (cell.plantSprite) {
+          cell.plantSprite.destroy();
+          cell.plantSprite = null;
+        }
+      });
+
+      // Recreate plant sprites
+      gameState.plants.forEach(({ x, y, plantType, growthLevel, waterLevel, sunLevel }) => {
+        const cell = this.grid.find((c) => c.x === x && c.y === y);
+        if (cell) {
+          const frameIndex = plantType !== 3 ? growthLevel : 6 + growthLevel;
+          cell.plantSprite = this.add
+            .sprite(cell.rect.x, cell.rect.y, 'plant', frameIndex)
+            .setScale(2);
+          // Restore plant data to grid state
+          this.gridState.setPlantType(x, y, plantType);
+          this.gridState.setGrowthLevel(x, y, growthLevel);
+          this.gridState.setWaterLevel(x, y, waterLevel);
+          this.gridState.setSunLevel(x, y, sunLevel);
+        }
+      });
+      this.updateGridVisuals();
+
+      console.log(`Game loaded from ${slot === 'autoSave' ? 'auto-save' : `slot ${slot}`}`);
+
+      // Set loading flag to false after loading is complete
+      this.isLoadingGame = false;
+    } else {
+      console.log(`No save found in ${slot === 'autoSave' ? 'auto-save' : `slot ${slot}`}`);
+    }
+  }
+
+  // Add auto-save trigger on player actions
   advanceTime() {
-    this.gameTime += 1; // Increment the game's time counter by one unit
-    console.log('Time advanced to: ' + this.gameTime);
-    //(Delete before turning in, only keeping to see if byte array updates)
-    console.log('Current Byte Array:', this.gridState.byteArray); // Print the byte array to check updates
-    this.updateCellResources(); // Update sun and water levels for each grid cell
-    this.handleTimeBasedEvents(); // Call a method to handle events that occur due to time advancement
+    // Only run handleTimeBasedEvents if it's not a loaded game state
+    if (!this.isLoadingGame) {
+      this.gameTime += 1; // Increment the game's time counter by one unit
+      console.log('Time advanced to: ' + this.gameTime);
+      //(Delete before turning in, only keeping to see if byte array updates)
+      console.log('Current Byte Array:', this.gridState.byteArray); // Print the byte array to check updates
+      this.updateCellResources(); // Update sun and water levels for each grid cell
+      this.handleTimeBasedEvents(); // Call a method to handle events that occur due to time advancement
+      this.checkPlayScenarioCompletion(); // Check if scenario is completed after advancing time
+      this.autoSaveGame();
+    } else {
+      console.log('Skipping time-based event handling during game load');
+    }
+  }
+
+  sowPlant() {
+    const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
+    if (playerCell && this.gridState.getPlantType(playerCell.x, playerCell.y) === 0) {
+      console.log(`Sowing plant at (${playerCell.x}, ${playerCell.y})`); // Log the action of sowing a plant
+
+      this.gridState.setPlantType(playerCell.x, playerCell.y, Phaser.Math.Between(1, 3)); // Randomly assign a plant type (1, 2, or 3)
+      this.gridState.setGrowthLevel(playerCell.x, playerCell.y, 1); // Start the plant at growth level 1
+      playerCell.rect.setFillStyle(0x8b4513); // Change the cell color to indicate a plant is present
+
+      // Add a visual representation of the plant using a specific frame
+      playerCell.plantSprite = this.add
+        .sprite(
+          playerCell.rect.x,
+          playerCell.rect.y,
+          'plant',
+          this.gridState.getPlantType(playerCell.x, playerCell.y) !== 3 ? 0 : 6
+        )
+        .setScale(2); // Add a plant sprite and scale it down to fit in the cell
+
+      console.log(
+        `Plant type ${this.gridState.getPlantType(playerCell.x, playerCell.y)} sown with growth level ${this.gridState.getGrowthLevel(
+          playerCell.x,
+          playerCell.y
+        )}`
+      );
+    } else {
+      console.log('A plant is already here!'); // Log a message if there's already a plant in the cell
+    }
+  }
+
+  reapPlant() {
+    const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
+    if (playerCell && this.gridState.getPlantType(playerCell.x, playerCell.y) !== 0) {
+      console.log(
+        `Reaping plant at (${playerCell.x}, ${playerCell.y}) of type ${this.gridState.getPlantType(
+          playerCell.x,
+          playerCell.y
+        )} and level ${this.gridState.getGrowthLevel(playerCell.x, playerCell.y)}`
+      );
+      this.gridState.setPlantType(playerCell.x, playerCell.y, 0); // Clear plant type
+      this.gridState.setGrowthLevel(playerCell.x, playerCell.y, 0); // Reset growth level
+      this.gridState.setWaterLevel(playerCell.x, playerCell.y, 0); // Reset water level
+      this.gridState.setSunLevel(playerCell.x, playerCell.y, 0); // Reset sun level
+
+      if (playerCell.plantSprite) {
+        playerCell.plantSprite.destroy(); // Remove the plant sprite
+        playerCell.plantSprite = null; // Set the plant sprite reference to null
+      }
+      playerCell.rect.setFillStyle(0x057a26); // Reset the cell color to indicate no plant
+    } else {
+      console.log('No plant to reap here!'); // Log a message if there's no plant to reap
+    }
+  }
+
+  getPlayerCell() {
+    // Find the cell where the player is currently located
+    return this.grid.find(
+      (cell) => cell.x === this.player.gridX && cell.y === this.player.gridY
+    );
   }
 
   updateCellResources() {
@@ -285,67 +517,6 @@ Press Shift + 1-5 to load from a slot.
     }
   }
 
-  reapPlant() {
-    const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
-    if (playerCell && this.gridState.getPlantType(playerCell.x, playerCell.y) !== 0) {
-      console.log(
-        `Reaping plant at (${playerCell.x}, ${playerCell.y}) of type ${this.gridState.getPlantType(
-          playerCell.x,
-          playerCell.y
-        )} and level ${this.gridState.getGrowthLevel(playerCell.x, playerCell.y)}`
-      );
-      this.gridState.setPlantType(playerCell.x, playerCell.y, 0); // Clear plant type
-      this.gridState.setGrowthLevel(playerCell.x, playerCell.y, 0); // Reset growth level
-      this.gridState.setWaterLevel(playerCell.x, playerCell.y, 0); // Reset water level
-      this.gridState.setSunLevel(playerCell.x, playerCell.y, 0); // Reset sun level
-
-      if (playerCell.plantSprite) {
-        playerCell.plantSprite.destroy(); // Remove the plant sprite
-        playerCell.plantSprite = null; // Set the plant sprite reference to null
-      }
-      playerCell.rect.setFillStyle(0x057a26); // Reset the cell color to indicate no plant
-    } else {
-      console.log('No plant to reap here!'); // Log a message if there's no plant to reap
-    }
-  }
-
-  sowPlant() {
-    const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
-    if (playerCell && this.gridState.getPlantType(playerCell.x, playerCell.y) === 0) {
-      console.log(`Sowing plant at (${playerCell.x}, ${playerCell.y})`); // Log the action of sowing a plant
-
-      this.gridState.setPlantType(playerCell.x, playerCell.y, Phaser.Math.Between(1, 3)); // Randomly assign a plant type (1, 2, or 3)
-      this.gridState.setGrowthLevel(playerCell.x, playerCell.y, 1); // Start the plant at growth level 1
-      playerCell.rect.setFillStyle(0x8b4513); // Change the cell color to indicate a plant is present
-
-      // Add a visual representation of the plant using a specific frame
-      playerCell.plantSprite = this.add
-        .sprite(
-          playerCell.rect.x,
-          playerCell.rect.y,
-          'plant',
-          this.gridState.getPlantType(playerCell.x, playerCell.y) !== 3 ? 0 : 6
-        )
-        .setScale(2); // Add a plant sprite and scale it down to fit in the cell
-
-      console.log(
-        `Plant type ${this.gridState.getPlantType(playerCell.x, playerCell.y)} sown with growth level ${this.gridState.getGrowthLevel(
-          playerCell.x,
-          playerCell.y
-        )}`
-      );
-    } else {
-      console.log('A plant is already here!'); // Log a message if there's already a plant in the cell
-    }
-  }
-
-  getPlayerCell() {
-    // Find the cell where the player is currently located
-    return this.grid.find(
-      (cell) => cell.x === this.player.gridX && cell.y === this.player.gridY
-    );
-  }
-
   checkPlayScenarioCompletion() {
     // Condition for completing the play scenario (e.g. at least 5 plants at growth level 3 or above)
     const requiredGrowthLevel = 3; // Define the minimum growth level requirement
@@ -368,108 +539,30 @@ Press Shift + 1-5 to load from a slot.
         `Play scenario completed! ${count} plants have reached growth level ${requiredGrowthLevel} or above.`
       );
       this.playScenarioCompleted = true; // Mark the play scenario as completed
+      this.add.text(200, 50, 'Play Scenario Completed!', { font: '32px Arial', fill: '#ff0000' }); // Display completion message
     }
   }
-  saveGame(slot) {
-    const plants = [];
 
-    // Gather plant data from the grid
+  updateGridVisuals() {
     for (let y = 0; y < this.gridSize; y++) {
-        for (let x = 0; x < this.gridSize; x++) {
-            const plantType = this.gridState.getPlantType(x, y);
-            const growthLevel = this.gridState.getGrowthLevel(x, y);
-            const waterLevel = this.gridState.getWaterLevel(x, y);
-            const sunLevel = this.gridState.getSunLevel(x, y);
-            if (plantType !== 0) {
-                plants.push({
-                    x,
-                    y,
-                    plantType,
-                    growthLevel,
-                    waterLevel,
-                    sunLevel,
-                });
-            }
-        }
-    }
-
-    const gameState = {
-        gridState: Array.from(this.gridState.byteArray), // Convert byte array to regular array for JSON compatibility
-        gameTime: this.gameTime,
-        playerPosition: { x: this.player.gridX, y: this.player.gridY },
-        plants, // Add plant data
-    };
-
-    localStorage.setItem(`saveSlot${slot}`, JSON.stringify(gameState));
-    console.log(`Game saved to slot ${slot}`);
-}
-
-loadGame(slot) {
-  const savedState = localStorage.getItem(`saveSlot${slot}`);
-  if (savedState) {
-      const gameState = JSON.parse(savedState);
-
-      // Restore grid state
-      this.gridState.byteArray.set(gameState.gridState);
-
-      // Restore game variables
-      this.gameTime = gameState.gameTime;
-      this.player.gridX = gameState.playerPosition.x;
-      this.player.gridY = gameState.playerPosition.y;
-
-      // Clear existing sprites
-      this.grid.forEach((cell) => {
-          if (cell.plantSprite) {
-              cell.plantSprite.destroy();
-              cell.plantSprite = null;
-          }
-      });
-
-      // Recreate plant sprites
-      gameState.plants.forEach(({ x, y, plantType, growthLevel, waterLevel, sunLevel }) => {
-          const cell = this.grid.find((c) => c.x === x && c.y === y);
-          if (cell) {
-              const frameIndex = plantType !== 3 ? growthLevel : 6 + growthLevel;
-              cell.plantSprite = this.add
-                  .sprite(cell.rect.x, cell.rect.y, 'plant', frameIndex)
-                  .setScale(2);
-              // Restore plant data to grid state
-              this.gridState.setPlantType(x, y, plantType);
-              this.gridState.setGrowthLevel(x, y, growthLevel);
-              this.gridState.setWaterLevel(x, y, waterLevel);
-              this.gridState.setSunLevel(x, y, sunLevel);
-          }
-      });
-      this.updateGridVisuals();
-
-      console.log(`Game loaded from slot ${slot}`);
-  } else {
-      console.log(`No save found in slot ${slot}`);
-  }
-}
-
-updateGridVisuals() {
-  for (let y = 0; y < this.gridSize; y++) {
       for (let x = 0; x < this.gridSize; x++) {
-          const cell = this.grid.find((c) => c.x === x && c.y === y);
-          if (cell) {
-              // Skip updating cells that already have a restored plant sprite
-              if (cell.plantSprite) {
-                  continue;
-              }
-
-              const sunLevel = this.gridState.getSunLevel(x, y);
-              const waterLevel = this.gridState.getWaterLevel(x, y);
-              const color = Phaser.Display.Color.GetColor(
-                  Math.min(255, sunLevel * 80),
-                  100,
-                  Math.min(255, waterLevel * 25)
-              );
-              cell.rect.setFillStyle(color);
-        
+        const cell = this.grid.find((c) => c.x === x && c.y === y);
+        if (cell) {
+          // Skip updating cells that already have a restored plant sprite
+          if (cell.plantSprite) {
+            continue;
           }
-          
+
+          const sunLevel = this.gridState.getSunLevel(x, y);
+          const waterLevel = this.gridState.getWaterLevel(x, y);
+          const color = Phaser.Display.Color.GetColor(
+            Math.min(255, sunLevel * 80),
+            100,
+            Math.min(255, waterLevel * 25)
+          );
+          cell.rect.setFillStyle(color);
         }
+      }
     }
   }
 }
