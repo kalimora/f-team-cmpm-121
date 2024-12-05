@@ -378,12 +378,16 @@ Press Shift + 1-5 to load from a slot.
         for (let x = 0; x < this.gridSize; x++) {
             const plantType = this.gridState.getPlantType(x, y);
             const growthLevel = this.gridState.getGrowthLevel(x, y);
+            const waterLevel = this.gridState.getWaterLevel(x, y);
+            const sunLevel = this.gridState.getSunLevel(x, y);
             if (plantType !== 0) {
                 plants.push({
                     x,
                     y,
                     plantType,
                     growthLevel,
+                    waterLevel,
+                    sunLevel,
                 });
             }
         }
@@ -422,7 +426,7 @@ loadGame(slot) {
       });
 
       // Recreate plant sprites
-      gameState.plants.forEach(({ x, y, plantType, growthLevel }) => {
+      gameState.plants.forEach(({ x, y, plantType, growthLevel, waterLevel, sunLevel }) => {
           const cell = this.grid.find((c) => c.x === x && c.y === y);
           if (cell) {
               const frameIndex = plantType !== 3 ? growthLevel : 6 + growthLevel;
@@ -432,8 +436,11 @@ loadGame(slot) {
               // Restore plant data to grid state
               this.gridState.setPlantType(x, y, plantType);
               this.gridState.setGrowthLevel(x, y, growthLevel);
+              this.gridState.setWaterLevel(x, y, waterLevel);
+              this.gridState.setSunLevel(x, y, sunLevel);
           }
       });
+      this.updateGridVisuals();
 
       console.log(`Game loaded from slot ${slot}`);
   } else {
