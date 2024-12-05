@@ -135,14 +135,6 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
-    // Add explanation text for save/load functionality
-    const explanationText = `
-Press 1-5 to save to a slot.
-Press Shift + 1-5 to load from a slot.
-    `;
-
-    this.add.text(550, 1, explanationText, { font: '16px Arial', fill: '#ffffff', wordWrap: { width: 400 } });
-
     // Map keys for saving/loading
     this.input.keyboard.on('keydown', (event) => {
       if (!event.shiftKey) {
