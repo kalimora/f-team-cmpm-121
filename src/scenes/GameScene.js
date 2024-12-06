@@ -281,16 +281,31 @@ export default class GameScene extends Phaser.Scene {
     }
     return plants;
   }
-
   saveGame(slot) {
     const gameState = {
-      gridState: Array.from(this.gridState.byteArray), // Convert byte array to regular array for JSON compatibility
+      gridState: Array.from(this.gridState.byteArray),
       gameTime: this.gameTime,
       playerPosition: { x: this.player.gridX, y: this.player.gridY },
       plants: this.collectPlantData(),
+      cellColors: this.collectCellColorData()
     };
     localStorage.setItem(`saveSlot${slot}`, JSON.stringify(gameState));
     console.log(`Game saved to slot ${slot}`);
+  }
+  
+  collectCellColorData() {
+    const cellColors = [];
+    for (let y = 0; y < this.gridSize; y++) {
+      for (let x = 0; x < this.gridSize; x++) {
+        cellColors.push({
+          x,
+          y,
+          sunLevel: this.gridState.getSunLevel(x, y),
+          waterLevel: this.gridState.getWaterLevel(x, y)
+        });
+      }
+    }
+    return cellColors;
   }
 
   loadGame(slot) {
@@ -298,27 +313,20 @@ export default class GameScene extends Phaser.Scene {
     if (savedState) {
       const gameState = JSON.parse(savedState);
       this.isLoadingGame = true;
-  
       this.gridState.byteArray.set(gameState.gridState);
       this.gameTime = gameState.gameTime;
-  
-      // Update player's grid position
       this.player.gridX = gameState.playerPosition.x;
       this.player.gridY = gameState.playerPosition.y;
-  
-      // Update player's pixel position
       this.player.x = this.gridOrigin.x + this.player.gridX * this.cellSize;
       this.player.y = this.gridOrigin.y + this.player.gridY * this.cellSize;
-  
-      // Clear existing plant sprites
+      
       this.grid.forEach((cell) => {
         if (cell.plantSprite) {
           cell.plantSprite.destroy();
           cell.plantSprite = null;
         }
       });
-  
-      // Recreate plant sprites
+      
       gameState.plants.forEach(({ x, y, plantType, growthLevel, waterLevel, sunLevel }) => {
         const cell = this.grid.find((c) => c.x === x && c.y === y);
         if (cell) {
@@ -326,14 +334,13 @@ export default class GameScene extends Phaser.Scene {
           cell.plantSprite = this.add
             .sprite(cell.rect.x, cell.rect.y, 'plant', frameIndex)
             .setScale(2);
-  
           this.gridState.setPlantType(x, y, plantType);
           this.gridState.setGrowthLevel(x, y, growthLevel);
           this.gridState.setWaterLevel(x, y, waterLevel);
           this.gridState.setSunLevel(x, y, sunLevel);
         }
       });
-  
+      
       this.updateGridVisuals();
       console.log(`Game loaded from ${slot === 'autoSave' ? 'auto-save' : `slot ${slot}`}`);
       this.isLoadingGame = false;
@@ -526,11 +533,6 @@ export default class GameScene extends Phaser.Scene {
       for (let x = 0; x < this.gridSize; x++) {
         const cell = this.grid.find((c) => c.x === x && c.y === y);
         if (cell) {
-          // Skip updating cells that already have a restored plant sprite
-          if (cell.plantSprite) {
-            continue;
-          }
-
           const sunLevel = this.gridState.getSunLevel(x, y);
           const waterLevel = this.gridState.getWaterLevel(x, y);
           const color = Phaser.Display.Color.GetColor(
