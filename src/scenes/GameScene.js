@@ -297,46 +297,37 @@ export default class GameScene extends Phaser.Scene {
     const savedState = localStorage.getItem(slot === 'autoSave' ? 'autoSave' : `saveSlot${slot}`);
     if (savedState) {
       const gameState = JSON.parse(savedState);
-
-      // Set loading flag to true
       this.isLoadingGame = true;
-
-      // Restore grid state
+  
       this.gridState.byteArray.set(gameState.gridState);
-
-      // Restore game variables
       this.gameTime = gameState.gameTime;
       this.player.gridX = gameState.playerPosition.x;
       this.player.gridY = gameState.playerPosition.y;
-
-      // Clear existing sprites
+  
       this.grid.forEach((cell) => {
         if (cell.plantSprite) {
           cell.plantSprite.destroy();
           cell.plantSprite = null;
         }
       });
-
-      // Recreate plant sprites
+  
       gameState.plants.forEach(({ x, y, plantType, growthLevel, waterLevel, sunLevel }) => {
         const cell = this.grid.find((c) => c.x === x && c.y === y);
         if (cell) {
-          const frameIndex = plantType !== 3 ? growthLevel : 6 + growthLevel;
+          const frameIndex = plantType !== 3 ? growthLevel - 1 : 6 + (growthLevel - 1);
           cell.plantSprite = this.add
             .sprite(cell.rect.x, cell.rect.y, 'plant', frameIndex)
             .setScale(2);
-          // Restore plant data to grid state
+  
           this.gridState.setPlantType(x, y, plantType);
           this.gridState.setGrowthLevel(x, y, growthLevel);
           this.gridState.setWaterLevel(x, y, waterLevel);
           this.gridState.setSunLevel(x, y, sunLevel);
         }
       });
+  
       this.updateGridVisuals();
-
       console.log(`Game loaded from ${slot === 'autoSave' ? 'auto-save' : `slot ${slot}`}`);
-
-      // Set loading flag to false after loading is complete
       this.isLoadingGame = false;
     } else {
       console.log(`No save found in ${slot === 'autoSave' ? 'auto-save' : `slot ${slot}`}`);
@@ -361,32 +352,27 @@ export default class GameScene extends Phaser.Scene {
   }
 
   sowPlant() {
-    const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
+    const playerCell = this.getPlayerCell();
     if (playerCell && this.gridState.getPlantType(playerCell.x, playerCell.y) === 0) {
-      console.log(`Sowing plant at (${playerCell.x}, ${playerCell.y})`); // Log the action of sowing a plant
-
-      this.gridState.setPlantType(playerCell.x, playerCell.y, Phaser.Math.Between(1, 3)); // Randomly assign a plant type (1, 2, or 3)
-      this.gridState.setGrowthLevel(playerCell.x, playerCell.y, 1); // Start the plant at growth level 1
-      playerCell.rect.setFillStyle(0x8b4513); // Change the cell color to indicate a plant is present
-
-      // Add a visual representation of the plant using a specific frame
+      console.log(`Sowing plant at (${playerCell.x}, ${playerCell.y})`);
+      const plantType = Phaser.Math.Between(1, 3);
+      this.gridState.setPlantType(playerCell.x, playerCell.y, plantType);
+      this.gridState.setGrowthLevel(playerCell.x, playerCell.y, 1);
+      playerCell.rect.setFillStyle(0x8b4513);
+  
+      const frameIndex = plantType !== 3 ? 0 : 6;
       playerCell.plantSprite = this.add
-        .sprite(
-          playerCell.rect.x,
-          playerCell.rect.y,
-          'plant',
-          this.gridState.getPlantType(playerCell.x, playerCell.y) !== 3 ? 0 : 6
-        )
-        .setScale(2); // Add a plant sprite and scale it down to fit in the cell
-
+        .sprite(playerCell.rect.x, playerCell.rect.y, 'plant', frameIndex)
+        .setScale(2);
+  
       console.log(
-        `Plant type ${this.gridState.getPlantType(playerCell.x, playerCell.y)} sown with growth level ${this.gridState.getGrowthLevel(
+        `Plant type ${plantType} sown with growth level ${this.gridState.getGrowthLevel(
           playerCell.x,
           playerCell.y
         )}`
       );
     } else {
-      console.log('A plant is already here!'); // Log a message if there's already a plant in the cell
+      console.log('A plant is already here!');
     }
   }
 
@@ -471,7 +457,6 @@ export default class GameScene extends Phaser.Scene {
       (this.gridState.getPlantType(x, y) === plantReq1 || this.gridState.getPlantType(x, y) === plantReq2) &&
       this.gridState.getGrowthLevel(x, y) < 5
     ) {
-      // Check nearby cells for the same plant type
       let nearbyPlants = 0;
       for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
@@ -479,10 +464,8 @@ export default class GameScene extends Phaser.Scene {
           const neighborX = x + i;
           const neighborY = y + j;
           if (
-            neighborX >= 0 &&
-            neighborX < this.gridSize &&
-            neighborY >= 0 &&
-            neighborY < this.gridSize &&
+            neighborX >= 0 && neighborX < this.gridSize &&
+            neighborY >= 0 && neighborY < this.gridSize &&
             (this.gridState.getPlantType(neighborX, neighborY) === plantReq1 ||
               this.gridState.getPlantType(neighborX, neighborY) === plantReq2)
           ) {
@@ -491,19 +474,15 @@ export default class GameScene extends Phaser.Scene {
         }
       }
       if (nearbyPlants >= neighborReq) {
-        this.gridState.setGrowthLevel(x, y, this.gridState.getGrowthLevel(x, y) + 1);
-
-        // Update the plant sprite frame to represent the growth level
+        const newGrowthLevel = this.gridState.getGrowthLevel(x, y) + 1;
+        this.gridState.setGrowthLevel(x, y, newGrowthLevel);
+  
         const cell = this.grid.find((c) => c.x === x && c.y === y);
         if (cell && cell.plantSprite) {
-          cell.plantSprite.setFrame(
-            this.gridState.getPlantType(x, y) !== 3
-              ? this.gridState.getGrowthLevel(x, y)
-              : 6 + this.gridState.getGrowthLevel(x, y)
-          );
+          const frameIndex = this.gridState.getPlantType(x, y) !== 3 ? newGrowthLevel - 1 : 6 + (newGrowthLevel - 1);
+          cell.plantSprite.setFrame(frameIndex);
         }
-
-        console.log(`Plant at (${x}, ${y}) grew to level ${this.gridState.getGrowthLevel(x, y)}`);
+        console.log(`Plant at (${x}, ${y}) grew to level ${newGrowthLevel}`);
       }
     }
   }
