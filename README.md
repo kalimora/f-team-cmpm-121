@@ -132,6 +132,10 @@ At first, we tried to complete each feature entirely before moving on to the nex
 Overall, we shifted our approach to focus on simplicity, collaboration, and iteration. This helped us meet the F0 requirements effectively and build a strong foundation for future improvements.
 
 ### F1.a - Everyone
+- We made sure the game's grid state is stored in a single contiguous byte array.
+- We changed our grid state to use a byte array as the main format.
+- We chose an AoS format and each cell's data (water levels, sun levels, cell type, and plant growth) is stored one after another in the array.
+- We added functions to convert the byte array into a readable format when needed, like for gameplay logic or rendering.
 
 ### F1.b - Kaylee
 - I made a saveGame function to save the game, player position, and plant data.
