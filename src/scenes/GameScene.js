@@ -301,9 +301,16 @@ export default class GameScene extends Phaser.Scene {
   
       this.gridState.byteArray.set(gameState.gridState);
       this.gameTime = gameState.gameTime;
+  
+      // Update player's grid position
       this.player.gridX = gameState.playerPosition.x;
       this.player.gridY = gameState.playerPosition.y;
   
+      // Update player's pixel position
+      this.player.x = this.gridOrigin.x + this.player.gridX * this.cellSize;
+      this.player.y = this.gridOrigin.y + this.player.gridY * this.cellSize;
+  
+      // Clear existing plant sprites
       this.grid.forEach((cell) => {
         if (cell.plantSprite) {
           cell.plantSprite.destroy();
@@ -311,6 +318,7 @@ export default class GameScene extends Phaser.Scene {
         }
       });
   
+      // Recreate plant sprites
       gameState.plants.forEach(({ x, y, plantType, growthLevel, waterLevel, sunLevel }) => {
         const cell = this.grid.find((c) => c.x === x && c.y === y);
         if (cell) {
