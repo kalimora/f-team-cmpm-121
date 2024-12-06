@@ -137,5 +137,44 @@ Overall, we shifted our approach to focus on simplicity, collaboration, and iter
 - I made a saveGame function to save the game, player position, and plant data.
 - I made a loadGame function to get back all of the saved data after the player activates the saveGame function.
 - I made sure that the sprites and growth levels did not get overwritten with an updateGridVisuals function.
-  
+
+### F1.c - Hasina and Samina
+- Added thick blue outlines for UI elements that players should interact with.
+- Implemented mouseover effects to highlight interactive elements.
+- Displayed instructional messages to guide players on their objectives.
+
+### F1.d - 
+
+
+### Reflection
+## Reflection
+
+Looking back on how we achieved the F1 requirements, our team made several adjustments:
+
+1. **Player Feedback and Visual Cues**:
+   Initially, our plan didn't include much real-time feedback for the player. To meet the F1 requirements, we added visual indicators for when a plant needed more sunlight or water—using icons above plants to signal their needs. This made it easier for players to understand actions and feel more in control.
+
+2. **Tools and Technologies**:
+   We underestimated the complexity of implementing feedback. To address this, we added new libraries for animations and UI feedback.
+
+3. **Evolution of Team Roles**:
+   Initially, we had rigid roles, but adding feedback mechanisms required more collaboration. Hasina worked with Samina to ensure visual cues matched player actions, and more group discussions fostered cross-role flexibility.
+
+4. **Iterative User Testing**:
+   We shifted to more iterative user testing by inviting friends and classmates to try the game. Their feedback led us to increase the visibility of indicators. Continuous testing became a core part of our development.
+
+5. **Simplified Feedback Mechanisms**:
+   We initially planned complex metrics for plant health but simplified it to just two needs: water and sunlight. This reduced complexity made the game more approachable.
+
+6. **Refactoring for Feedback Integration**:
+   Integrating feedback required refactoring plant growth logic. Shea and Kaylee worked on creating efficient event listeners to ensure smooth interactions.
+
+### Key Takeaways
+- **Enhanced Player Feedback**: Adding visual cues improved user experience and helped players understand the game better.
+- **Flexible Roles and Collaboration**: Adding feedback pushed us to work more collaboratively across roles.
+- **Iterative Testing**: Frequent user testing allowed us to adapt our design based on real experiences.
+- **Simplified Complexity**: Reducing plant health indicators made the game more approachable and enjoyable.
+
+Adapting to the F1 requirements helped us build a more player-centric game, emphasizing user experience and feedback. It taught us the value of flexibility in both team roles and game design.
+
 Feel free to adapt this file as we change our objectives!
