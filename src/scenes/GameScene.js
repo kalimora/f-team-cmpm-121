@@ -68,6 +68,8 @@ export default class GameScene extends Phaser.Scene {
     this.playScenarioCompleted = false; // Track if the play scenario has been completed
     this.gridState = new GridState(5); // Create a new GridState instance for the 5x5 grid
     this.isLoadingGame = false; // Flag to indicate if we are loading a saved game
+    this.undoStack = []; // Stack to store previous game states for undo functionality
+    this.redoStack = []; // Stack to store future game states for redo functionality
   }
 
   create() {
@@ -75,13 +77,17 @@ export default class GameScene extends Phaser.Scene {
     const buttonY = this.game.config.height / 6; // Vertically centered in the game viewport
     const titleX = buttonX - 35;
     // Adding a title above the button
-    this.add.text(titleX, buttonY - 65, 'Advance Time', { font: '16px Arial', fill: '#ffffff' });
-    this.timeButton = this.add.image(buttonX, buttonY, 'timeAdvanceButton')
-        .setInteractive()
-        .on('pointerdown', () => {
-          this.advanceTime();
-          this.checkPlayScenarioCompletion(); // Check if scenario is completed after advancing time
-        }); // Set up a button to advance game time
+    this.add.text(titleX, buttonY - 65, "Advance Time", {
+      font: "16px Arial",
+      fill: "#ffffff",
+    });
+    this.timeButton = this.add
+      .image(buttonX, buttonY, "timeAdvanceButton")
+      .setInteractive()
+      .on("pointerdown", () => {
+        this.advanceTime();
+        this.checkPlayScenarioCompletion(); // Check if scenario is completed after advancing time
+      }); // Set up a button to advance game time
 
     // Set up keyboard input
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -106,68 +112,91 @@ export default class GameScene extends Phaser.Scene {
     );
 
     // Set up reap and sow actions
-    this.input.keyboard.on('keydown-R', () => {
+    this.input.keyboard.on("keydown-R", () => {
       this.reapPlant();
       this.checkPlayScenarioCompletion(); // Check if scenario is completed after reaping
       this.autoSaveGame();
+      this.pushCurrentStateToUndoStack();
     }); // Reap a plant when 'R' key is pressed
-    this.input.keyboard.on('keydown-S', () => {
+    this.input.keyboard.on("keydown-S", () => {
       this.sowPlant();
       this.checkPlayScenarioCompletion(); // Check if scenario is completed after sowing
       this.autoSaveGame();
+      this.pushCurrentStateToUndoStack();
     }); // Sow a plant when 'S' key is pressed
 
     // Set up player movement
-    this.input.keyboard.on('keydown', (event) => {
-      if (event.code === 'ArrowLeft' && this.player.gridX > 0) {
+    this.input.keyboard.on("keydown", (event) => {
+      if (event.code === "ArrowLeft" && this.player.gridX > 0) {
         this.player.move(-1, 0); // Move player left
         this.autoSaveGame();
-      } else if (event.code === 'ArrowRight' && this.player.gridX < this.gridSize - 1) {
+      } else if (
+        event.code === "ArrowRight" &&
+        this.player.gridX < this.gridSize - 1
+      ) {
         this.player.move(1, 0); // Move player right
         this.autoSaveGame();
-      } else if (event.code === 'ArrowUp' && this.player.gridY > 0) {
+      } else if (event.code === "ArrowUp" && this.player.gridY > 0) {
         this.player.move(0, -1); // Move player up
         this.autoSaveGame();
-      } else if (event.code === 'ArrowDown' && this.player.gridY < this.gridSize - 1) {
+      } else if (
+        event.code === "ArrowDown" &&
+        this.player.gridY < this.gridSize - 1
+      ) {
         this.player.move(0, 1); // Move player down
         this.autoSaveGame();
       }
     });
 
     // Map keys for saving/loading
-    this.input.keyboard.on('keydown', (event) => {
+    this.input.keyboard.on("keydown", (event) => {
       if (!event.shiftKey) {
-          // Save slots (1-5)
-          if (event.code === 'Digit1') this.saveGame(1);
-          if (event.code === 'Digit2') this.saveGame(2);
-          if (event.code === 'Digit3') this.saveGame(3);
-          if (event.code === 'Digit4') this.saveGame(4);
-          if (event.code === 'Digit5') this.saveGame(5);
+        // Save slots (1-5)
+        if (event.code === "Digit1") this.saveGame(1);
+        if (event.code === "Digit2") this.saveGame(2);
+        if (event.code === "Digit3") this.saveGame(3);
+        if (event.code === "Digit4") this.saveGame(4);
+        if (event.code === "Digit5") this.saveGame(5);
       } else {
-          // Load slots (Shift + 1-5)
-          if (event.code === 'Digit1') this.loadGame(1);
-          if (event.code === 'Digit2') this.loadGame(2);
-          if (event.code === 'Digit3') this.loadGame(3);
-          if (event.code === 'Digit4') this.loadGame(4);
-          if (event.code === 'Digit5') this.loadGame(5);
+        // Load slots (Shift + 1-5)
+        if (event.code === "Digit1") this.loadGame(1);
+        if (event.code === "Digit2") this.loadGame(2);
+        if (event.code === "Digit3") this.loadGame(3);
+        if (event.code === "Digit4") this.loadGame(4);
+        if (event.code === "Digit5") this.loadGame(5);
+      }
+    });
+
+    // Undo and redo actions
+    this.input.keyboard.on("keydown", (event) => {
+      if (event.ctrlKey && event.code === "KeyZ") {
+        this.undo();
+      } else if (event.ctrlKey && event.code === "KeyY") {
+        this.redo();
       }
     });
 
     // Load auto-save if available
     this.checkForAutoSave();
 
+    // Push initial state to undo stack
+    this.pushCurrentStateToUndoStack();
+
     // Create an "Instructions" button
     const buttonA = this.game.config.width - 150;
     const buttonB = 50;
 
-    this.instructionsButton = this.add.text(buttonA, buttonB, 'Instructions', {
-      font: '18px Arial',
-      fill: '#ffffff',
-      backgroundColor: '#0000ff',
-      padding: { x: 10, y: 5 },
-    }).setInteractive().on('pointerdown', () => {
-      this.showInstructionsPopup();
-    });
+    this.instructionsButton = this.add
+      .text(buttonA, buttonB, "Instructions", {
+        font: "18px Arial",
+        fill: "#ffffff",
+        backgroundColor: "#0000ff",
+        padding: { x: 10, y: 5 },
+      })
+      .setInteractive()
+      .on("pointerdown", () => {
+        this.showInstructionsPopup();
+      });
   }
 
   showInstructionsPopup() {
@@ -180,7 +209,7 @@ export default class GameScene extends Phaser.Scene {
       0x000000,
       0.8
     );
-  
+
     // Add instructions text
     const instructionsText = `
       Instructions:
@@ -194,25 +223,28 @@ export default class GameScene extends Phaser.Scene {
   
       Click [Close] to close the instructions.
     `;
-  
+
     this.instructionsContent = this.add.text(
       this.game.config.width / 2 - 200,
       this.game.config.height / 2 - 150,
       instructionsText,
-      { font: '18px Arial', fill: '#ffffff', wordWrap: { width: 400 } }
+      { font: "18px Arial", fill: "#ffffff", wordWrap: { width: 400 } }
     );
-  
+
     // Add a "Close" button
-    this.closeButton = this.add.text(
-      this.game.config.width / 2 - 40,
-      this.game.config.height / 2 + 150,
-      '[Close]',
-      { font: '20px Arial', fill: '#ff0000' }
-    ).setInteractive().on('pointerdown', () => {
-      this.hideInstructionsPopup();
-    });
+    this.closeButton = this.add
+      .text(
+        this.game.config.width / 2 - 40,
+        this.game.config.height / 2 + 150,
+        "[Close]",
+        { font: "20px Arial", fill: "#ff0000" }
+      )
+      .setInteractive()
+      .on("pointerdown", () => {
+        this.hideInstructionsPopup();
+      });
   }
-  
+
   hideInstructionsPopup() {
     // Destroy all pop-up components
     if (this.popupBackground) this.popupBackground.destroy();
@@ -245,25 +277,99 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  pushCurrentStateToUndoStack() {
+    const currentState = this.getCurrentState();
+    this.undoStack.push(JSON.parse(JSON.stringify(currentState)));
+    console.log("Undo stack:", this.undoStack);
+    // this.redoStack = []; // This line clears the redo stack
+    //console.log("Redo stack:", this.redoStack);
+  }
+
+  undo() {
+    if (this.undoStack.length === 0) return;
+    console.log("Undoing last action");
+    const currentState = this.getCurrentState();
+    this.redoStack.push(currentState);
+    const lastState = this.undoStack.pop();
+    const tempRedoStack = this.redoStack.slice(); // Temporarily store the redo stack
+    this.restoreState(lastState);
+    this.redoStack = tempRedoStack; // Restore the redo stack
+  }
+
+  redo() {
+    if (this.redoStack.length === 0) return;
+    console.log("Redoing last action");
+    const lastUndoneState = this.redoStack.pop();
+    this.undoStack.push(this.getCurrentState());
+    this.restoreState(lastUndoneState);
+  }
+
+  restorePlayerPosition(playerPosition) {
+    this.player.gridX = playerPosition.x;
+    this.player.gridY = playerPosition.y;
+    this.player.x = this.gridOrigin.x + this.player.gridX * this.cellSize;
+    this.player.y = this.gridOrigin.y + this.player.gridY * this.cellSize;
+  }
+
+  clearPlantSprites() {
+    this.grid.forEach((cell) => {
+      if (cell.plantSprite) {
+        cell.plantSprite.destroy();
+        cell.plantSprite = null;
+      }
+    });
+  }
+
+  restorePlantSprites(plants) {
+    plants.forEach(({ x, y, plantType, growthLevel, waterLevel, sunLevel }) => {
+      const cell = this.grid.find((c) => c.x === x && c.y === y);
+      if (cell) {
+        const frameIndex =
+          plantType !== 3 ? growthLevel - 1 : 6 + (growthLevel - 1);
+        cell.plantSprite = this.add
+          .sprite(cell.rect.x, cell.rect.y, "plant", frameIndex)
+          .setScale(2);
+
+        this.gridState.setPlantType(x, y, plantType);
+        this.gridState.setGrowthLevel(x, y, growthLevel);
+        this.gridState.setWaterLevel(x, y, waterLevel);
+        this.gridState.setSunLevel(x, y, sunLevel);
+      }
+    });
+  }
+
+  restoreState(state) {
+    console.log("Restoring state:", state);
+    this.gridState.byteArray.set(state.gridState);
+    this.gameTime = state.gameTime;
+    this.undoStack = state.undoStack.map((state) =>
+      JSON.parse(JSON.stringify(state))
+    );
+    this.redoStack = state.redoStack.map((state) =>
+      JSON.parse(JSON.stringify(state))
+    );
+    this.restorePlayerPosition(state.playerPosition);
+    this.clearPlantSprites();
+    this.restorePlantSprites(state.plants);
+    this.updateGridVisuals();
+  }
+
   checkForAutoSave() {
-    const autoSaveState = localStorage.getItem('autoSave');
+    const autoSaveState = localStorage.getItem("autoSave");
     if (autoSaveState) {
-      const continueGame = window.confirm("Do you want to continue where you left off?");
+      const continueGame = globalThis.confirm(
+        "Do you want to continue where you left off?"
+      );
       if (continueGame) {
-        this.loadGame('autoSave');
+        this.loadGame("autoSave");
       }
     }
   }
 
   autoSaveGame() {
-    const gameState = {
-      gridState: Array.from(this.gridState.byteArray), // Convert byte array to regular array for JSON compatibility
-      gameTime: this.gameTime,
-      playerPosition: { x: this.player.gridX, y: this.player.gridY },
-      plants: this.collectPlantData(),
-    };
-    localStorage.setItem('autoSave', JSON.stringify(gameState));
-    console.log('Game auto-saved');
+    const gameState = this.getCurrentState();
+    localStorage.setItem("autoSave", JSON.stringify(gameState));
+    console.log("Game auto-saved");
   }
 
   collectPlantData() {
@@ -282,17 +388,28 @@ export default class GameScene extends Phaser.Scene {
     return plants;
   }
   saveGame(slot) {
+    const gameState = this.getCurrentState();
+    localStorage.setItem(`saveSlot${slot}`, JSON.stringify(gameState));
+    console.log(`Game saved to slot ${slot}`);
+  }
+
+  getCurrentState() {
     const gameState = {
       gridState: Array.from(this.gridState.byteArray),
       gameTime: this.gameTime,
       playerPosition: { x: this.player.gridX, y: this.player.gridY },
       plants: this.collectPlantData(),
-      cellColors: this.collectCellColorData()
+      cellColors: this.collectCellColorData(),
+      undoStack: this.undoStack.map((state) =>
+        JSON.parse(JSON.stringify(state))
+      ), // Deep copy of undo stack
+      redoStack: this.redoStack.map((state) =>
+        JSON.parse(JSON.stringify(state))
+      ), // Deep copy of redo stack
     };
-    localStorage.setItem(`saveSlot${slot}`, JSON.stringify(gameState));
-    console.log(`Game saved to slot ${slot}`);
+    return gameState;
   }
-  
+
   collectCellColorData() {
     const cellColors = [];
     for (let y = 0; y < this.gridSize; y++) {
@@ -301,7 +418,7 @@ export default class GameScene extends Phaser.Scene {
           x,
           y,
           sunLevel: this.gridState.getSunLevel(x, y),
-          waterLevel: this.gridState.getWaterLevel(x, y)
+          waterLevel: this.gridState.getWaterLevel(x, y),
         });
       }
     }
@@ -309,43 +426,21 @@ export default class GameScene extends Phaser.Scene {
   }
 
   loadGame(slot) {
-    const savedState = localStorage.getItem(slot === 'autoSave' ? 'autoSave' : `saveSlot${slot}`);
+    const savedState = localStorage.getItem(
+      slot === "autoSave" ? "autoSave" : `saveSlot${slot}`
+    );
     if (savedState) {
       const gameState = JSON.parse(savedState);
       this.isLoadingGame = true;
-      this.gridState.byteArray.set(gameState.gridState);
-      this.gameTime = gameState.gameTime;
-      this.player.gridX = gameState.playerPosition.x;
-      this.player.gridY = gameState.playerPosition.y;
-      this.player.x = this.gridOrigin.x + this.player.gridX * this.cellSize;
-      this.player.y = this.gridOrigin.y + this.player.gridY * this.cellSize;
-      
-      this.grid.forEach((cell) => {
-        if (cell.plantSprite) {
-          cell.plantSprite.destroy();
-          cell.plantSprite = null;
-        }
-      });
-      
-      gameState.plants.forEach(({ x, y, plantType, growthLevel, waterLevel, sunLevel }) => {
-        const cell = this.grid.find((c) => c.x === x && c.y === y);
-        if (cell) {
-          const frameIndex = plantType !== 3 ? growthLevel - 1 : 6 + (growthLevel - 1);
-          cell.plantSprite = this.add
-            .sprite(cell.rect.x, cell.rect.y, 'plant', frameIndex)
-            .setScale(2);
-          this.gridState.setPlantType(x, y, plantType);
-          this.gridState.setGrowthLevel(x, y, growthLevel);
-          this.gridState.setWaterLevel(x, y, waterLevel);
-          this.gridState.setSunLevel(x, y, sunLevel);
-        }
-      });
-      
-      this.updateGridVisuals();
-      console.log(`Game loaded from ${slot === 'autoSave' ? 'auto-save' : `slot ${slot}`}`);
+      this.restoreState(gameState);
+      console.log(
+        `Game loaded from ${slot === "autoSave" ? "auto-save" : `slot ${slot}`}`
+      );
       this.isLoadingGame = false;
     } else {
-      console.log(`No save found in ${slot === 'autoSave' ? 'auto-save' : `slot ${slot}`}`);
+      console.log(
+        `No save found in ${slot === "autoSave" ? "auto-save" : `slot ${slot}`}`
+      );
     }
   }
 
@@ -354,32 +449,35 @@ export default class GameScene extends Phaser.Scene {
     // Only run handleTimeBasedEvents if it's not a loaded game state
     if (!this.isLoadingGame) {
       this.gameTime += 1; // Increment the game's time counter by one unit
-      console.log('Time advanced to: ' + this.gameTime);
+      console.log("Time advanced to: " + this.gameTime);
       //(Delete before turning in, only keeping to see if byte array updates)
-      console.log('Current Byte Array:', this.gridState.byteArray); // Print the byte array to check updates
+      console.log("Current Byte Array:", this.gridState.byteArray); // Print the byte array to check updates
       this.updateCellResources(); // Update sun and water levels for each grid cell
       this.handleTimeBasedEvents(); // Call a method to handle events that occur due to time advancement
       this.checkPlayScenarioCompletion(); // Check if scenario is completed after advancing time
       this.autoSaveGame();
     } else {
-      console.log('Skipping time-based event handling during game load');
+      console.log("Skipping time-based event handling during game load");
     }
   }
 
   sowPlant() {
     const playerCell = this.getPlayerCell();
-    if (playerCell && this.gridState.getPlantType(playerCell.x, playerCell.y) === 0) {
+    if (
+      playerCell &&
+      this.gridState.getPlantType(playerCell.x, playerCell.y) === 0
+    ) {
       console.log(`Sowing plant at (${playerCell.x}, ${playerCell.y})`);
       const plantType = Phaser.Math.Between(1, 3);
       this.gridState.setPlantType(playerCell.x, playerCell.y, plantType);
       this.gridState.setGrowthLevel(playerCell.x, playerCell.y, 1);
       playerCell.rect.setFillStyle(0x8b4513);
-  
+
       const frameIndex = plantType !== 3 ? 0 : 6;
       playerCell.plantSprite = this.add
-        .sprite(playerCell.rect.x, playerCell.rect.y, 'plant', frameIndex)
+        .sprite(playerCell.rect.x, playerCell.rect.y, "plant", frameIndex)
         .setScale(2);
-  
+
       console.log(
         `Plant type ${plantType} sown with growth level ${this.gridState.getGrowthLevel(
           playerCell.x,
@@ -387,18 +485,26 @@ export default class GameScene extends Phaser.Scene {
         )}`
       );
     } else {
-      console.log('A plant is already here!');
+      console.log("A plant is already here!");
     }
   }
 
   reapPlant() {
     const playerCell = this.getPlayerCell(); // Get the cell where the player is currently located
-    if (playerCell && this.gridState.getPlantType(playerCell.x, playerCell.y) !== 0) {
+    if (
+      playerCell &&
+      this.gridState.getPlantType(playerCell.x, playerCell.y) !== 0
+    ) {
       console.log(
-        `Reaping plant at (${playerCell.x}, ${playerCell.y}) of type ${this.gridState.getPlantType(
+        `Reaping plant at (${playerCell.x}, ${
+          playerCell.y
+        }) of type ${this.gridState.getPlantType(
           playerCell.x,
           playerCell.y
-        )} and level ${this.gridState.getGrowthLevel(playerCell.x, playerCell.y)}`
+        )} and level ${this.gridState.getGrowthLevel(
+          playerCell.x,
+          playerCell.y
+        )}`
       );
       this.gridState.setPlantType(playerCell.x, playerCell.y, 0); // Clear plant type
       this.gridState.setGrowthLevel(playerCell.x, playerCell.y, 0); // Reset growth level
@@ -411,7 +517,7 @@ export default class GameScene extends Phaser.Scene {
       }
       playerCell.rect.setFillStyle(0x057a26); // Reset the cell color to indicate no plant
     } else {
-      console.log('No plant to reap here!'); // Log a message if there's no plant to reap
+      console.log("No plant to reap here!"); // Log a message if there's no plant to reap
     }
   }
 
@@ -431,16 +537,28 @@ export default class GameScene extends Phaser.Scene {
 
         // Update the byte array with new values
         this.gridState.setSunLevel(x, y, sunGain);
-        this.gridState.setWaterLevel(x, y, Math.min(this.gridState.getWaterLevel(x, y) + waterGain, 10));
+        this.gridState.setWaterLevel(
+          x,
+          y,
+          Math.min(this.gridState.getWaterLevel(x, y) + waterGain, 10)
+        );
 
         // Update visual feedback based on resource levels
         const sunColorIntensity = Math.min(255, sunGain * 80);
-        const waterColorIntensity = Math.min(255, this.gridState.getWaterLevel(x, y) * 25);
-        const color = this.gridState.getWaterLevel(x, y) === 10
-          ? Phaser.Display.Color.GetColor(0, 100, 255)  // Fixed color if water is at maximum
-          : Phaser.Display.Color.GetColor(sunColorIntensity, 100, waterColorIntensity);
+        const waterColorIntensity = Math.min(
+          255,
+          this.gridState.getWaterLevel(x, y) * 25
+        );
+        const color =
+          this.gridState.getWaterLevel(x, y) === 10
+            ? Phaser.Display.Color.GetColor(0, 100, 255) // Fixed color if water is at maximum
+            : Phaser.Display.Color.GetColor(
+                sunColorIntensity,
+                100,
+                waterColorIntensity
+              );
 
-        const cell = this.grid.find(c => c.x === x && c.y === y);
+        const cell = this.grid.find((c) => c.x === x && c.y === y);
         if (cell) {
           cell.rect.setFillStyle(color);
         }
@@ -449,7 +567,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   handleTimeBasedEvents() {
-    console.log('Handling events for gameTime:', this.gameTime);
+    console.log("Handling events for gameTime:", this.gameTime);
     for (let y = 0; y < this.gridSize; y++) {
       for (let x = 0; x < this.gridSize; x++) {
         const plantType = this.gridState.getPlantType(x, y);
@@ -469,7 +587,8 @@ export default class GameScene extends Phaser.Scene {
     if (
       this.gridState.getWaterLevel(x, y) > waterReq &&
       this.gridState.getSunLevel(x, y) > sunReq &&
-      (this.gridState.getPlantType(x, y) === plantReq1 || this.gridState.getPlantType(x, y) === plantReq2) &&
+      (this.gridState.getPlantType(x, y) === plantReq1 ||
+        this.gridState.getPlantType(x, y) === plantReq2) &&
       this.gridState.getGrowthLevel(x, y) < 5
     ) {
       let nearbyPlants = 0;
@@ -479,8 +598,10 @@ export default class GameScene extends Phaser.Scene {
           const neighborX = x + i;
           const neighborY = y + j;
           if (
-            neighborX >= 0 && neighborX < this.gridSize &&
-            neighborY >= 0 && neighborY < this.gridSize &&
+            neighborX >= 0 &&
+            neighborX < this.gridSize &&
+            neighborY >= 0 &&
+            neighborY < this.gridSize &&
             (this.gridState.getPlantType(neighborX, neighborY) === plantReq1 ||
               this.gridState.getPlantType(neighborX, neighborY) === plantReq2)
           ) {
@@ -491,10 +612,13 @@ export default class GameScene extends Phaser.Scene {
       if (nearbyPlants >= neighborReq) {
         const newGrowthLevel = this.gridState.getGrowthLevel(x, y) + 1;
         this.gridState.setGrowthLevel(x, y, newGrowthLevel);
-  
+
         const cell = this.grid.find((c) => c.x === x && c.y === y);
         if (cell && cell.plantSprite) {
-          const frameIndex = this.gridState.getPlantType(x, y) !== 3 ? newGrowthLevel - 1 : 6 + (newGrowthLevel - 1);
+          const frameIndex =
+            this.gridState.getPlantType(x, y) !== 3
+              ? newGrowthLevel - 1
+              : 6 + (newGrowthLevel - 1);
           cell.plantSprite.setFrame(frameIndex);
         }
         console.log(`Plant at (${x}, ${y}) grew to level ${newGrowthLevel}`);
@@ -524,7 +648,10 @@ export default class GameScene extends Phaser.Scene {
         `Play scenario completed! ${count} plants have reached growth level ${requiredGrowthLevel} or above.`
       );
       this.playScenarioCompleted = true; // Mark the play scenario as completed
-      this.add.text(200, 50, 'Play Scenario Completed!', { font: '32px Arial', fill: '#ff0000' }); // Display completion message
+      this.add.text(200, 50, "Play Scenario Completed!", {
+        font: "32px Arial",
+        fill: "#ff0000",
+      }); // Display completion message
     }
   }
 
