@@ -143,7 +143,13 @@ Overall, we shifted our approach to focus on simplicity, collaboration, and iter
 - Implemented mouseover effects to highlight interactive elements.
 - Displayed instructional messages to guide players on their objectives.
 
-### F1.d - 
+### F1.d - Shea
+- Refactored some of the saving logic into functions so it can be re-usable for undo/redo
+- added undo and redo stacks
+- when a major move is made (sowing, reaping, advancing time) that game state is pushed to the undo stack
+- when ctrl + z is pressed the most recent state in undo stack is popped out and loaded
+- the state that was undone is pushed into the redo stack
+- when ctrl + y is pressed the most recent state in the redo stack is popped out and loaded
 
 
 ### Reflection
