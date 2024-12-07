@@ -187,4 +187,13 @@ Looking back on how we achieved the F1 requirements, our team made several adjus
 
 Adapting to the F1 requirements helped us build a more player-centric game, emphasizing user experience and feedback. It taught us the value of flexibility in both team roles and game design.
 
+### F2.a - Kaylee & Shea
+-
+
+### F2.b - Kaylee & Celeste
+-
+
+### F2.c - Samina & Hasina
+-
+
 Feel free to adapt this file as we change our objectives!
