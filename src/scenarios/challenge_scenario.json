@@ -1,0 +1,23 @@
+{
+    "scenarioName": "Challenge",
+    "startConditions": {
+      "gridSize": 5,
+      "playerPosition": [2, 2],
+      "plants": [
+        { "position": [0, 0], "type": 1, "growth": 1 },
+        { "position": [4, 4], "type": 3, "growth": 3 }
+      ]
+    },
+    "weather": {
+      "sunRange": [1, 8],
+      "waterRange": [1, 3]
+    },
+    "victoryCondition": {
+      "plantsAtLevel": { "level": 4, "count": 5 }
+    },
+    "events": [
+      { "time": 15, "action": "addPlant", "details": { "position": [2, 2], "type": 2 } },
+      { "time": 30, "action": "increaseSun", "details": { "amount": 3 } }
+    ]
+  }
+  

@@ -1,0 +1,20 @@
+{
+    "scenarioName": "Tutorial",
+    "startConditions": {
+      "gridSize": 3,
+      "playerPosition": [1, 1],
+      "plants": [
+        { "position": [0, 0], "type": 1, "growth": 1 },
+        { "position": [2, 2], "type": 2, "growth": 2 }
+      ]
+    },
+    "weather": {
+      "sunRange": [0, 6],
+      "waterRange": [0, 2]
+    },
+    "events": [
+      { "time": 5, "action": "addPlant", "details": { "position": [1, 1], "type": 3 } },
+      { "time": 10, "action": "increaseWater", "details": { "amount": 2 } }
+    ]
+  }
+  
