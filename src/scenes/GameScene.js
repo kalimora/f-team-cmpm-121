@@ -1,9 +1,10 @@
 import Player from "../objects/Player.js";
+
 class GridState {
   constructor(gridSize) {
     this.gridSize = gridSize;
     this.byteArray = new Uint8Array(gridSize * gridSize * 4); // Initialize the byte array with 4 bytes per cell
-  }
+  } 
 
   // Get the value at a specific grid position
   getValue(x, y, offset) {
@@ -70,6 +71,7 @@ export default class GameScene extends Phaser.Scene {
     this.isLoadingGame = false; // Flag to indicate if we are loading a saved game
     this.undoStack = []; // Stack to store previous game states for undo functionality
     this.redoStack = []; // Stack to store future game states for redo functionality
+    this.UNDO_LIMIT = 10; // Limit undo stack to max 10 states
   }
 
   create() {
@@ -81,6 +83,7 @@ export default class GameScene extends Phaser.Scene {
       font: "16px Arial",
       fill: "#ffffff",
     });
+
     this.timeButton = this.add
       .image(buttonX, buttonY, "timeAdvanceButton")
       .setInteractive()
@@ -118,6 +121,7 @@ export default class GameScene extends Phaser.Scene {
       this.autoSaveGame();
       this.pushCurrentStateToUndoStack();
     }); // Reap a plant when 'R' key is pressed
+    
     this.input.keyboard.on("keydown-S", () => {
       this.sowPlant();
       this.checkPlayScenarioCompletion(); // Check if scenario is completed after sowing
@@ -280,10 +284,15 @@ export default class GameScene extends Phaser.Scene {
   pushCurrentStateToUndoStack() {
     const currentState = this.getCurrentState();
     this.undoStack.push(JSON.parse(JSON.stringify(currentState)));
+
+    // Trim the undo stack if it exceeds the limit
+    if (this.undoStack.length > this.UNDO_LIMIT) {
+      this.undoStack.shift(); // Remove the oldest state
+    }
+
     console.log("Undo stack:", this.undoStack);
-    // this.redoStack = []; // This line clears the redo stack
-    //console.log("Redo stack:", this.redoStack);
   }
+
 
   undo() {
     if (this.undoStack.length === 0) return;
@@ -291,9 +300,7 @@ export default class GameScene extends Phaser.Scene {
     const currentState = this.getCurrentState();
     this.redoStack.push(currentState);
     const lastState = this.undoStack.pop();
-    const tempRedoStack = this.redoStack.slice(); // Temporarily store the redo stack
     this.restoreState(lastState);
-    this.redoStack = tempRedoStack; // Restore the redo stack
   }
 
   redo() {
@@ -303,6 +310,7 @@ export default class GameScene extends Phaser.Scene {
     this.undoStack.push(this.getCurrentState());
     this.restoreState(lastUndoneState);
   }
+
 
   restorePlayerPosition(playerPosition) {
     this.player.gridX = playerPosition.x;
@@ -342,12 +350,6 @@ export default class GameScene extends Phaser.Scene {
     console.log("Restoring state:", state);
     this.gridState.byteArray.set(state.gridState);
     this.gameTime = state.gameTime;
-    this.undoStack = state.undoStack.map((state) =>
-      JSON.parse(JSON.stringify(state))
-    );
-    this.redoStack = state.redoStack.map((state) =>
-      JSON.parse(JSON.stringify(state))
-    );
     this.restorePlayerPosition(state.playerPosition);
     this.clearPlantSprites();
     this.restorePlantSprites(state.plants);
@@ -367,10 +369,16 @@ export default class GameScene extends Phaser.Scene {
   }
 
   autoSaveGame() {
-    const gameState = this.getCurrentState();
-    localStorage.setItem("autoSave", JSON.stringify(gameState));
-    console.log("Game auto-saved");
-  }
+    try {
+        const gameState = this.getCurrentState();
+        const compressedState = LZString.compress(JSON.stringify(gameState)); // Use global LZString
+        localStorage.setItem("autoSave", compressedState);
+        console.log("Game auto-saved (compressed)");
+    } catch (e) {
+        console.error("Auto-save failed:", e.message);
+    }
+}
+
 
   collectPlantData() {
     const plants = [];
@@ -387,27 +395,26 @@ export default class GameScene extends Phaser.Scene {
     }
     return plants;
   }
+
   saveGame(slot) {
-    const gameState = this.getCurrentState();
-    localStorage.setItem(`saveSlot${slot}`, JSON.stringify(gameState));
-    console.log(`Game saved to slot ${slot}`);
+    try {
+      const gameState = this.getCurrentState();
+      const compressedState = LZString.compress(JSON.stringify(gameState));
+      localStorage.setItem(`saveSlot${slot}`, compressedState);
+      console.log(`Game saved to slot ${slot} (compressed)`);
+    } catch (e) {
+      console.error(`Save to slot ${slot} failed:`, e.message);
+    }
   }
 
+
   getCurrentState() {
-    const gameState = {
-      gridState: Array.from(this.gridState.byteArray),
+    return {
+      gridState: Array.from(this.gridState.byteArray), // Minimal data saved
       gameTime: this.gameTime,
       playerPosition: { x: this.player.gridX, y: this.player.gridY },
       plants: this.collectPlantData(),
-      cellColors: this.collectCellColorData(),
-      undoStack: this.undoStack.map((state) =>
-        JSON.parse(JSON.stringify(state))
-      ), // Deep copy of undo stack
-      redoStack: this.redoStack.map((state) =>
-        JSON.parse(JSON.stringify(state))
-      ), // Deep copy of redo stack
     };
-    return gameState;
   }
 
   collectCellColorData() {
@@ -426,24 +433,26 @@ export default class GameScene extends Phaser.Scene {
   }
 
   loadGame(slot) {
-    const savedState = localStorage.getItem(
-      slot === "autoSave" ? "autoSave" : `saveSlot${slot}`
-    );
-    if (savedState) {
-      const gameState = JSON.parse(savedState);
-      this.isLoadingGame = true;
-      this.restoreState(gameState);
-      console.log(
-        `Game loaded from ${slot === "autoSave" ? "auto-save" : `slot ${slot}`}`
+    try {
+      const savedState = localStorage.getItem(
+        slot === "autoSave" ? "autoSave" : `saveSlot${slot}`
       );
-      this.isLoadingGame = false;
-    } else {
-      console.log(
-        `No save found in ${slot === "autoSave" ? "auto-save" : `slot ${slot}`}`
-      );
+      if (savedState) {
+        const decompressedState = JSON.parse(LZString.decompress(savedState));
+        this.restoreState(decompressedState);
+        console.log(
+          `Game loaded from ${slot === "autoSave" ? "auto-save" : `slot ${slot}`}`
+        );
+      } else {
+        console.log(
+          `No save found in ${slot === "autoSave" ? "auto-save" : `slot ${slot}`}`
+        );
+      }
+    } catch (e) {
+      console.error("Load game failed:", e.message);
     }
   }
-
+  
   // Add auto-save trigger on player actions
   advanceTime() {
     // Only run handleTimeBasedEvents if it's not a loaded game state
