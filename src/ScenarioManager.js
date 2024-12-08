@@ -1,90 +1,149 @@
-export default class ScenarioManager {
-    constructor(scene) {
-      this.scene = scene;
-      this.currentScenario = null;
+class ScenarioManager {
+  constructor(gameScene, scenarios) {
+    this.gameScene = gameScene;
+    this.scenarios = scenarios;
+    this.activeScenario = null;
+    this.gameTime = 0;
+  }
+
+  loadScenario(scenarioName) {
+    const scenario = this.scenarios[scenarioName];
+    if (!scenario) {
+      console.error(`Scenario "${scenarioName}" not found.`);
+      return;
     }
-  
-    loadScenario(scenarioName) {
-      const scenarioData = this.scene.cache.json.get(scenarioName);
-      this.currentScenario = scenarioData;
-      this.setupScenario();
+    this.activeScenario = scenario;
+    this.applyStartingConditions(scenario.startConditions);
+
+    if (!scenario.victoryConditions || !Array.isArray(scenario.victoryConditions) || scenario.victoryConditions.length === 0) {
+      console.warn(`Victory conditions for "${scenarioName}" are not properly defined.`);
+      this.activeScenario.victoryConditions = [];
     }
-  
-    setupScenario() {
-      const { startConditions, events } = this.currentScenario;
-      
-      // Set up grid size
-      this.scene.gridSize = startConditions.gridSize;
-      
-      // Set up player position
-      this.scene.player.setGridPosition(...startConditions.playerPosition);
-      
-      // Set up initial plants
-      startConditions.plants.forEach(plant => {
-        const [x, y] = plant.position;
-        this.scene.gridState.setPlantType(x, y, plant.type);
-        this.scene.gridState.setGrowthLevel(x, y, plant.growth);
-      });
-      
-      // Set up weather conditions
-      this.scene.sunRange = startConditions.weather.sunRange;
-      this.scene.waterRange = startConditions.weather.waterRange;
-      
-      // Set up victory condition if present
-      if (startConditions.victoryCondition) {
-        this.scene.victoryCondition = startConditions.victoryCondition;
-      }
-      
-      // Set up events
-      this.setupEvents(events);
+    console.log(`Loaded scenario: ${scenario.scenarioName}`);
+  }
+
+  applyStartingConditions(startConditions) {
+    const { gridSize, playerPosition, plants } = startConditions;
+    this.gameScene.gridState = new GridState(gridSize);
+    this.gameScene.gridSize = gridSize;
+
+    if (!this.gameScene.gridOrigin) {
+      this.gameScene.gridOrigin = { x: 50, y: 50 };
     }
-  
-    setupEvents(events) {
-      events.forEach(event => {
-        this.scene.time.delayedCall(event.time * 1000, () => {
-          this.handleEvent(event);
-        });
-      });
+    if (!this.gameScene.cellSize) {
+      this.gameScene.cellSize = 100;
     }
-  
-    handleEvent(event) {
-        switch (event.action) {
-          case 'addPlant': {
-            const { position, type } = event.details;
-            this.scene.gridState.setPlantType(...position, type);
-            this.scene.gridState.setGrowthLevel(...position, 1);
-            break;
+
+    const [playerX, playerY] = playerPosition;
+    if (!this.gameScene.player) {
+      this.gameScene.player = new Player(
+        this.gameScene,
+        this.gameScene.gridOrigin.x + playerX * this.gameScene.cellSize,
+        this.gameScene.gridOrigin.y + playerY * this.gameScene.cellSize,
+        "player"
+      );
+    }
+    this.gameScene.player.gridX = playerX;
+    this.gameScene.player.gridY = playerY;
+    this.gameScene.player.updatePosition(this.gameScene.gridOrigin, this.gameScene.cellSize);
+
+    plants.forEach(({ position, type, growth }) => {
+      const [x, y] = position;
+      this.gameScene.gridState.setPlantType(x, y, type);
+      this.gameScene.gridState.setGrowthLevel(x, y, growth);
+    });
+
+    console.log("Starting conditions applied.");
+  }
+
+  handleScheduledEvents() {
+    if (!this.activeScenario) return;
+    const events = this.activeScenario.events.filter((event) => event.time === this.gameTime);
+    events.forEach((event) => {
+      switch (event.action) {
+        case "addPlant": {
+          const { position, type } = event.details;
+          const [x, y] = position;
+          this.gameScene.gridState.setPlantType(x, y, type);
+          this.gameScene.gridState.setGrowthLevel(x, y, 1);
+          console.log(`Plant of type ${type} added at (${x}, ${y}).`);
+          break;
+        }
+        case "increaseSun": {
+          const { amount } = event.details;
+          for (let y = 0; y < this.gameScene.gridSize; y++) {
+            for (let x = 0; x < this.gameScene.gridSize; x++) {
+              const currentSun = this.gameScene.gridState.getSunLevel(x, y);
+              this.gameScene.gridState.setSunLevel(x, y, currentSun + amount);
+            }
           }
-          case 'increaseSun': {
-            this.scene.sunRange[1] += event.details.amount;
-            break;
+          console.log(`Increased sun level by ${amount}.`);
+          break;
+        }
+        case "increaseWater": {
+          const { amount } = event.details;
+          for (let y = 0; y < this.gameScene.gridSize; y++) {
+            for (let x = 0; x < this.gameScene.gridSize; x++) {
+              const currentWater = this.gameScene.gridState.getWaterLevel(x, y);
+              this.gameScene.gridState.setWaterLevel(x, y, currentWater + amount);
+            }
           }
-          case 'increaseWater': {
-            this.scene.waterRange[1] += event.details.amount;
-            break;
-          }
-          // Add more event handlers as needed
-          default: {
-            console.log(`Unhandled event action: ${event.action}`);
-            break;
-          }
+          console.log(`Increased water level by ${amount}.`);
+          break;
+        }
+        default: {
+          console.warn(`Unknown event action: ${event.action}`);
         }
       }
-  
-    checkVictoryCondition() {
-      if (!this.currentScenario.startConditions.victoryCondition) return false;
-      
-      const { level, count } = this.currentScenario.startConditions.victoryCondition.plantsAtLevel;
-      let plantsAtLevel = 0;
-      
-      for (let y = 0; y < this.scene.gridSize; y++) {
-        for (let x = 0; x < this.scene.gridSize; x++) {
-          if (this.scene.gridState.getGrowthLevel(x, y) >= level) {
-            plantsAtLevel++;
+    });
+  }
+
+  checkVictoryConditions() {
+    if (!this.activeScenario || !this.activeScenario.victoryConditions) {
+      return;
+    }
+    const { victoryConditions } = this.activeScenario;
+    let conditionsMet = true;
+    victoryConditions.forEach((condition) => {
+      switch (condition.type) {
+        case "plantGrowth": {
+          const { position, growthLevel } = condition.details;
+          const [x, y] = position;
+          if (this.gameScene.gridState.getGrowthLevel(x, y) < growthLevel) {
+            conditionsMet = false;
           }
+          break;
+        }
+        case "totalPlants": {
+          const { minCount } = condition.details;
+          let plantCount = 0;
+          for (let y = 0; y < this.gameScene.gridSize; y++) {
+            for (let x = 0; x < this.gameScene.gridSize; x++) {
+              if (this.gameScene.gridState.getPlantType(x, y) !== 0) {
+                plantCount++;
+              }
+            }
+          }
+          if (plantCount < minCount) {
+            conditionsMet = false;
+          }
+          break;
+        }
+        default: {
+          console.warn(`Unknown victory condition: ${condition.type}`);
         }
       }
-      
-      return plantsAtLevel >= count;
+    });
+    if (conditionsMet) {
+      console.log("Victory conditions met! Scenario completed.");
+      this.gameScene.playScenarioCompleted = true;
     }
   }
+
+  advanceTime() {
+    this.gameTime += 1;
+    console.log(`Game time advanced to: ${this.gameTime}`);
+    this.handleScheduledEvents();
+    this.checkVictoryConditions();
+  }
+}
