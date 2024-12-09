@@ -24,7 +24,7 @@ Our team is composed of dedicated members each bringing unique skills and roles:
 - **Buttons:** https://prinbles.itch.io/robin
 - **General:** https://cupnooble.itch.io/sprout-lands-asset-pack
 
-## Documentation
+## F0 Documentation
 ### F0.a - Shea
 ```
 📦f-team-cmpm-121
@@ -90,7 +90,7 @@ Growth levels for each plant visually evolve based on sun and water resources, e
 - I also adjusted sun levels to give the grids a larger range of possible values since sun levels aren't stored. Additionally, this gives more variety for growth conditions for the different plant types
 - Finally, I updated the water values to reset after a plant has been reaped, that way the player starts with fresh soil when replanting.
 
-## F0.g - Samina
+### F0.g - Samina
 - I added a condition to complete the play scenario when enough plants reach a certain growth level in GameScene.js.
 - I also implemented a check that tracks if the play scenario is completed, ensuring it only triggers once to avoid loops.
 
@@ -131,6 +131,7 @@ At first, we tried to complete each feature entirely before moving on to the nex
 
 Overall, we shifted our approach to focus on simplicity, collaboration, and iteration. This helped us meet the F0 requirements effectively and build a strong foundation for future improvements.
 
+## F1 Documentation
 ### F1.a - Everyone
 - We made sure the game's grid state is stored in a single contiguous byte array.
 - We changed our grid state to use a byte array as the main format.
@@ -157,8 +158,6 @@ Overall, we shifted our approach to focus on simplicity, collaboration, and iter
 
 
 ### Reflection
-## Reflection
-
 Looking back on how we achieved the F1 requirements, our team made several adjustments:
 
 1. **Player Feedback and Visual Cues**:
@@ -187,19 +186,30 @@ Looking back on how we achieved the F1 requirements, our team made several adjus
 
 Adapting to the F1 requirements helped us build a more player-centric game, emphasizing user experience and feedback. It taught us the value of flexibility in both team roles and game design.
 
+## F2 Documentation
 ### F2.a - Everyone
 - Created scenarios.dsl file as a draft of what design we wanted the scenarios to look like.
 - Created json files that depicted different scenarios for the game. There is a tutorial scenario and a challenge scenario.
 - Imported the scenarios into the gameScene.js file. Along with that, we implemented the code by creating functions inside of the scenarioManager class. These functions include handTimeBasedEvents, loadScenario, applyingStartingConditions, handleScheduledEvents, checkVictoryConditions, and loadNextScenario.
 - Updated our previous code to work with the loading and saving within different scenarios (ex. recreating the grid of a scenario). 
 
-### F2.b - Kaylee & Shea 
+### F2.b - Everyone 
 - Created a PlantType class, which dealt with the growing conditions and the special abilities.
 - Created the new plant types in a const condition.
 - Created new functions for our plant type index (ex. addPlantType, removePlantType) 
 - Updated our previous code to work with these plant types (ex. sowPlant, plantGrowth)
 
-### F2.c - Samina & Hasina
+### F2.c - Everyone
+-
+
+## F3 Documentation
+### F3.a - Everyone
+-
+
+### F3.b - Everyone
+-
+
+### F3.c - Everyone
 -
 
 Feel free to adapt this file as we change our objectives!
