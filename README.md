@@ -192,8 +192,10 @@ Looking back on how we achieved the F1 requirements, our team made several adjus
 Adapting to the F1 requirements helped us build a more player-centric game, emphasizing user experience and feedback. It taught us the value of flexibility in both team roles and game design.
 
 ## F2 Documentation
+
 ### F0+F1 No major changes were made in for F0 and F1, so the F0 and F1 requirements are still met in F2. 
-### Scenario Design:
+
+#### Scenario Design:
 ```json
 {
   "scenarioName": "Tutorial",
@@ -230,6 +232,10 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
   ],
   "nextScenario": "challenge"
 }
+
+```markdown
+```json
+{ "key": "value" }
 
 ### F2.a - Everyone
 - Created scenarios.dsl file as a draft of what design we wanted the scenarios to look like.
