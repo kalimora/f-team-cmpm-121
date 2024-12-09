@@ -1,10 +1,11 @@
 import challengeScenario from "../scenarios/challenge_scenario.json" assert { type: "json" };
 import tutorialScenario from "../scenarios/tutorial_scenario.json" assert { type: "json" };
+import LanguageManager from "../managers/LanguageManager.ts";
 import Player from "../objects/Player.ts";
 import Phaser from "phaser";
 import LZString from "lz-string";
 
-class PlantType {  
+class PlantType {
   name: string;
   growthConditions: (
     x: number,
@@ -443,9 +444,7 @@ class ScenarioManager {
     });
 
     if (conditionsMet) {
-      console.log(
-        `Victory conditions met!`
-      );
+      console.log(`Victory conditions met!`);
       this.loadNextScenario();
     }
   }
@@ -468,6 +467,7 @@ class ScenarioManager {
 }
 
 export default class GameScene extends Phaser.Scene {
+  private languageManager: LanguageManager;
   constructor() {
     super("gameScene");
     this.grid = [] as Array<{
@@ -488,16 +488,22 @@ export default class GameScene extends Phaser.Scene {
       challenge: challengeScenario,
       tutorial: tutorialScenario,
     }); // Initialize ScenarioManager
+    this.languageManager = LanguageManager.getInstance();
   }
 
   create(): void {
     const buttonX: number = 50;
     const buttonY: number = this.game.config.height / 6;
 
-    this.add.text(buttonX - 35, buttonY - 65, "Advance Time", {
-      font: "16px Arial",
-      fill: "#ffffff",
-    });
+    this.add.text(
+      buttonX - 35,
+      buttonY - 65,
+      this.languageManager.t("Advance Time Button"),
+      {
+        font: "16px Arial",
+        color: "#ffffff",
+      }
+    );
 
     const _timeButton = this.add
       .image(buttonX, buttonY, "timeAdvanceButton")
@@ -510,12 +516,17 @@ export default class GameScene extends Phaser.Scene {
     const instructionsButtonX: number = this.game.config.width - 150;
     const instructionsButtonY: number = 50;
     const _instructionsButton = this.add
-      .text(instructionsButtonX, instructionsButtonY, "Instructions", {
-        font: "18px Arial",
-        fill: "#ffffff",
-        backgroundColor: "#0000ff",
-        padding: { x: 10, y: 5 },
-      })
+      .text(
+        instructionsButtonX,
+        instructionsButtonY,
+        this.languageManager.t("Instructions"),
+        {
+          font: "18px Arial",
+          fill: "#ffffff",
+          backgroundColor: "#0000ff",
+          padding: { x: 10, y: 5 },
+        }
+      )
       .setInteractive()
       .on("pointerdown", () => {
         this.showInstructionsPopup();
@@ -535,9 +546,32 @@ export default class GameScene extends Phaser.Scene {
     });
 
     this.load.start();
+
+    // Add select language text
+    this.add.text(10, 170, this.languageManager.t("select language"), {
+      font: "16px Arial",
+      color: "#ffffff",
+    });
+
+    const languages: Language[] = ["en", "es", "ar", "zh"];
+    languages.forEach((lang, index) => {
+      this.add
+        .text(10, 200 + index * 30, lang.toUpperCase(), {
+          font: "16px Arial",
+          color: "#ffffff",
+        })
+        .setInteractive()
+        .on("pointerdown", () => {
+          this.languageManager.setLanguage(lang);
+          this.scene.restart(); // Restart the scene to apply the new language
+        });
+    });
   }
+
   // Add these methods here
   showInstructionsPopup(): void {
+    const languageManager = LanguageManager.getInstance();
+
     // Create a semi-transparent background for the pop-up
     const popupBackground = this.add.rectangle(
       this.game.config.width / 2,
@@ -549,31 +583,8 @@ export default class GameScene extends Phaser.Scene {
     );
     popupBackground.setDepth(10);
 
-    // Add instructions text
-    const instructionsText: string = `
-        Instructions:
-    
-        - Arrow Keys: Move Character
-        - S: Sow a plant at the current position
-        - R: Reap a plant at the current position
-        - 1-5: Save game to a slot
-        - Shift + 1-5: Load game from a slot
-        - Ctrl + Z: Undo last action
-        - Ctrl + Y: Redo last action
-        - Advance Time Button: Manually advance 
-        game time
-    
-        Plant Types:
-        - Sun Lover: Thrives in high sun, low water 
-        conditions
-        - Water Lover: Prefers high water, low sun 
-        conditions
-        - Balanced: Grows best with equal sun and 
-        water levels
-        - Neighbor Dependent: Grows when adjacent
-        to other plants
-        Click [Close] to close the instructions.
-    `;
+    // Retrieve instructions text from LanguageManager
+    const instructionsText: string = languageManager.t("instructions_text");
 
     const instructionsContent = this.add.text(
       this.game.config.width / 2 - 300,
@@ -588,8 +599,8 @@ export default class GameScene extends Phaser.Scene {
       .text(
         this.game.config.width / 1.3 - 40,
         this.game.config.height / 2 + 150,
-        "[Close]",
-        { font: "20px Arial", fill: "#ff0000" }
+        languageManager.t("Close"),
+        { font: "20px Arial", color: "#ff0000" }
       )
       .setInteractive()
       .on("pointerdown", () => {
@@ -870,7 +881,7 @@ export default class GameScene extends Phaser.Scene {
         const frameIndex: number =
           plantType !== 3 ? growthLevel - 1 : 6 + (growthLevel - 1);
         cell.plantSprite = this.add
-          .sprite(cell.rect.x, cell.rect.y, "plant", frameIndex)
+          .sprite(cell.rect.x, cell.rect.y, "plants", frameIndex)
           .setScale(2);
 
         this.gridState.setPlantType(x, y, plantType);
@@ -914,7 +925,7 @@ export default class GameScene extends Phaser.Scene {
 
     if (autoSaveState) {
       const continueGame: boolean = globalThis.confirm(
-        "Do you want to continue where you left off?"
+        this.languageManager.t("continue")
       );
 
       if (continueGame) {
