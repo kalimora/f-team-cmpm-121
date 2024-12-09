@@ -442,9 +442,41 @@ class ScenarioManager {
       }
     });
 
-    if (conditionsMet) {
-      console.log(`Victory conditions met!`);
-      this.loadNextScenario();
+     if (conditionsMet) {
+      const message = this.gameScene.languageManager.t("victory_message");    
+      // Log to console
+      console.log(message);
+    
+      // Create a message container dynamically
+      const messageContainer = document.createElement('div');
+      messageContainer.textContent = message;
+    
+      // Style the message container for a centered popup
+      Object.assign(messageContainer.style, {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        color: 'white',
+        padding: '20px',
+        borderRadius: '10px',
+        textAlign: 'center',
+        fontSize: '20px',
+        zIndex: '1000', // Ensures it appears above other elements
+        boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.5)'
+      });
+    
+      // Append to the body
+      document.body.appendChild(messageContainer);
+    
+      // Automatically remove the message after a delay (optional)
+      setTimeout(() => {
+        messageContainer.remove();
+      }, 3000); // Message disappears after 3 seconds
+    
+      this.gameScene.playScenarioCompleted = true;
+      this.loadNextScenario(); // Load the next scenario
     }
   }
 
