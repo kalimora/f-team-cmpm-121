@@ -444,7 +444,7 @@ class ScenarioManager {
 
     if (conditionsMet) {
       console.log(
-        `Victory conditions met! Scenario "${this.activeScenario.scenarioName}" completed.`
+        `Victory conditions met!`
       );
       this.loadNextScenario();
     }
