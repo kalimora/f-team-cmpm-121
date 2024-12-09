@@ -1,5 +1,15 @@
 {
+  "name": "phaser-game",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
   "dependencies": {
-    "phaser": "^3.87.0"
+    "phaser": "^3.55.2"
+  },
+  "devDependencies": {
+    "vite": "^3.0.0"
   }
 }

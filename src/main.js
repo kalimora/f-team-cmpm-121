@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 //import scenes
 import BootScene from "./scenes/BootScene.js";
 import GameScene from "./scenes/GameScene.js";

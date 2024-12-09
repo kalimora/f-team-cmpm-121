@@ -1,5 +1,5 @@
-import challengeScenario from "../scenarios/challenge_scenario.json" with { type: "json" };
-import tutorialScenario from "../scenarios/tutorial_scenario.json" with { type: "json" };
+import challengeScenario from "../scenarios/challenge_scenario.json";
+import tutorialScenario from "../scenarios/tutorial_scenario.json";
 import Player from "../objects/Player.js";
 
 class PlantType {
@@ -33,27 +33,55 @@ class PlantType {
 }
 
 const plantTypes = [
-  new PlantType("Sun Lover", 
-    (x, y, gridState, gameTime) => gridState.getSunLevel(x, y) > 3 && gridState.getWaterLevel(x, y) < 3 && gameTime % 2 === 0,
+  new PlantType(
+    "Sun Lover",
+    (x, y, gridState, gameTime) =>
+      gridState.getSunLevel(x, y) > 3 &&
+      gridState.getWaterLevel(x, y) < 3 &&
+      gameTime % 2 === 0,
     (x, y, gridState) => {
       // Special ability: Increase sun level in adjacent cells
-      const neighbors = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]];
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
       neighbors.forEach(([nx, ny]) => {
-        if (nx >= 0 && nx < gridState.gridSize && ny >= 0 && ny < gridState.gridSize) {
+        if (
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+        ) {
           const currentSun = gridState.getSunLevel(nx, ny);
           gridState.setSunLevel(nx, ny, Math.min(10, currentSun + 1));
         }
       });
     },
-    [14,16,17,18,19] // carrot
+    [14, 16, 17, 18, 19] // carrot
   ),
-  new PlantType("Water Lover", 
-    (x, y, gridState, gameTime) => gridState.getWaterLevel(x, y) > 3 && gridState.getSunLevel(x, y) < 3 && gameTime % 3 === 0,
+  new PlantType(
+    "Water Lover",
+    (x, y, gridState, gameTime) =>
+      gridState.getWaterLevel(x, y) > 3 &&
+      gridState.getSunLevel(x, y) < 3 &&
+      gameTime % 3 === 0,
     (x, y, gridState) => {
       // Special ability: Increase water level in adjacent cells
-      const neighbors = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]];
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
       neighbors.forEach(([nx, ny]) => {
-        if (nx >= 0 && nx < gridState.gridSize && ny >= 0 && ny < gridState.gridSize) {
+        if (
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+        ) {
           const currentWater = gridState.getWaterLevel(nx, ny);
           gridState.setWaterLevel(nx, ny, Math.min(10, currentWater + 1));
         }
@@ -61,8 +89,11 @@ const plantTypes = [
     },
     [21, 23, 24, 25, 26] // cabbage
   ),
-  new PlantType("Balanced", 
-    (x, y, gridState) => Math.abs(gridState.getSunLevel(x, y) - gridState.getWaterLevel(x, y)) <= 1,
+  new PlantType(
+    "Balanced",
+    (x, y, gridState) =>
+      Math.abs(gridState.getSunLevel(x, y) - gridState.getWaterLevel(x, y)) <=
+      1,
     (x, y, gridState) => {
       // Special ability: Balance sun and water levels in current cell
       const sunLevel = gridState.getSunLevel(x, y);
@@ -71,20 +102,40 @@ const plantTypes = [
       gridState.setSunLevel(x, y, average);
       gridState.setWaterLevel(x, y, average);
     },
-    [28,30,31,32,33] // plum
+    [28, 30, 31, 32, 33] // plum
   ),
-  new PlantType("Neighbor Dependent", 
+  new PlantType(
+    "Neighbor Dependent",
     (x, y, gridState) => {
-      const neighbors = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]].filter(([nx, ny]) => 
-        nx >= 0 && nx < gridState.gridSize && ny >= 0 && ny < gridState.gridSize
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ].filter(
+        ([nx, ny]) =>
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
       );
       return neighbors.some(([nx, ny]) => gridState.getPlantType(nx, ny) !== 0);
     },
     (x, y, gridState) => {
       // Special ability: Boost growth of neighboring plants
-      const neighbors = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]];
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
       neighbors.forEach(([nx, ny]) => {
-        if (nx >= 0 && nx < gridState.gridSize && ny >= 0 && ny < gridState.gridSize) {
+        if (
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+        ) {
           const currentGrowth = gridState.getGrowthLevel(nx, ny);
           if (currentGrowth > 0 && currentGrowth < 5) {
             gridState.setGrowthLevel(nx, ny, currentGrowth + 1);
@@ -92,15 +143,15 @@ const plantTypes = [
         }
       });
     },
-    [35,37,38,39,40] // eggplant
-  )
+    [35, 37, 38, 39, 40] // eggplant
+  ),
 ];
 
 class GridState {
   constructor(gridSize) {
     this.gridSize = gridSize;
     this.byteArray = new Uint8Array(gridSize * gridSize * 4); // Initialize the byte array with 4 bytes per cell
-    this.plantTyped = []
+    this.plantTyped = [];
   }
 
   getValue(x, y, offset) {
@@ -153,7 +204,7 @@ class GridState {
   setGrowthLevel(x, y, value) {
     this.setValue(x, y, 3, value);
   }
-  
+
   clear() {
     this.byteArray.fill(0);
   }
@@ -162,9 +213,12 @@ class GridState {
     const waterLevel = this.getWaterLevel(x, y);
     const sunColorIntensity = Math.min(255, sunLevel * 80);
     const waterColorIntensity = Math.min(255, waterLevel * 25);
-    return Phaser.Display.Color.GetColor(sunColorIntensity, 100, waterColorIntensity);
+    return Phaser.Display.Color.GetColor(
+      sunColorIntensity,
+      100,
+      waterColorIntensity
+    );
   }
-  
 }
 
 class ScenarioManager {
@@ -183,22 +237,28 @@ class ScenarioManager {
     }
     this.activeScenario = scenario;
     this.applyStartingConditions(scenario.startConditions);
-    
+
     // Ensure victory conditions are defined
-    if (!scenario.victoryConditions || !Array.isArray(scenario.victoryConditions) || scenario.victoryConditions.length === 0) {
-      console.warn(`Victory conditions for "${scenarioName}" are not properly defined.`);
+    if (
+      !scenario.victoryConditions ||
+      !Array.isArray(scenario.victoryConditions) ||
+      scenario.victoryConditions.length === 0
+    ) {
+      console.warn(
+        `Victory conditions for "${scenarioName}" are not properly defined.`
+      );
       this.activeScenario.victoryConditions = [];
     }
-    
+
     console.log(`Loaded scenario: ${scenario.scenarioName}`);
   }
-  
+
   applyStartingConditions(startConditions) {
     const { gridSize, playerPosition, plants } = startConditions;
-  
+
     this.gameScene.gridState = new GridState(gridSize);
     this.gameScene.gridSize = gridSize;
-  
+
     // Ensure gridOrigin and cellSize are initialized
     if (!this.gameScene.gridOrigin) {
       this.gameScene.gridOrigin = { x: 50, y: 50 };
@@ -206,9 +266,9 @@ class ScenarioManager {
     if (!this.gameScene.cellSize) {
       this.gameScene.cellSize = 100;
     }
-  
+
     this.gameScene.createGrid(); // Ensure the grid is created first
-  
+
     const [playerX, playerY] = playerPosition;
     if (!this.gameScene.player) {
       this.gameScene.player = new Player(
@@ -218,24 +278,28 @@ class ScenarioManager {
         "player"
       );
     }
-  
+
     this.gameScene.player.gridX = playerX;
     this.gameScene.player.gridY = playerY;
-    this.gameScene.player.updatePosition(this.gameScene.gridOrigin, this.gameScene.cellSize);
-  
+    this.gameScene.player.updatePosition(
+      this.gameScene.gridOrigin,
+      this.gameScene.cellSize
+    );
+
     plants.forEach(({ position, type, growth }) => {
       const [x, y] = position;
       this.gameScene.gridState.setPlantType(x, y, type);
       this.gameScene.gridState.setGrowthLevel(x, y, growth);
     });
-  
+
     console.log("Starting conditions applied.");
   }
-  
 
   handleScheduledEvents() {
     if (!this.activeScenario) return;
-    const events = this.activeScenario.events.filter((event) => event.time === this.gameTime);
+    const events = this.activeScenario.events.filter(
+      (event) => event.time === this.gameTime
+    );
     events.forEach((event) => {
       switch (event.action) {
         case "addPlant": {
@@ -262,7 +326,11 @@ class ScenarioManager {
           for (let y = 0; y < this.gameScene.gridSize; y++) {
             for (let x = 0; x < this.gameScene.gridSize; x++) {
               const currentWater = this.gameScene.gridState.getWaterLevel(x, y);
-              this.gameScene.gridState.setWaterLevel(x, y, currentWater + amount);
+              this.gameScene.gridState.setWaterLevel(
+                x,
+                y,
+                currentWater + amount
+              );
             }
           }
           console.log(`Increased water level by ${amount}.`);
@@ -277,10 +345,10 @@ class ScenarioManager {
 
   checkVictoryConditions() {
     if (!this.activeScenario || !this.activeScenario.victoryConditions) return;
-  
+
     const { victoryConditions } = this.activeScenario;
     let conditionsMet = true;
-  
+
     victoryConditions.forEach((condition) => {
       switch (condition.type) {
         case "plantGrowth": {
@@ -311,7 +379,7 @@ class ScenarioManager {
         }
       }
     });
-  
+
     if (conditionsMet) {
       const message = `Victory conditions met! Scenario "${this.activeScenario.scenarioName}" completed.`;
 
@@ -319,23 +387,23 @@ class ScenarioManager {
       console.log(message);
 
       // Create a message container dynamically
-      const messageContainer = document.createElement('div');
+      const messageContainer = document.createElement("div");
       messageContainer.textContent = message;
 
       // Style the message container for a centered popup
       Object.assign(messageContainer.style, {
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        color: 'white',
-        padding: '20px',
-        borderRadius: '10px',
-        textAlign: 'center',
-        fontSize: '20px',
-        zIndex: '1000', // Ensures it appears above other elements
-        boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.5)'
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        color: "white",
+        padding: "20px",
+        borderRadius: "10px",
+        textAlign: "center",
+        fontSize: "20px",
+        zIndex: "1000", // Ensures it appears above other elements
+        boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.5)",
       });
 
       // Append to the body
@@ -366,7 +434,6 @@ class ScenarioManager {
       console.log("No more scenarios to load.");
     }
   }
-  
 }
 
 export default class GameScene extends Phaser.Scene {
@@ -390,19 +457,19 @@ export default class GameScene extends Phaser.Scene {
   create() {
     const buttonX = 50;
     const buttonY = this.game.config.height / 6;
-  
+
     this.add.text(buttonX - 35, buttonY - 65, "Advance Time", {
       font: "16px Arial",
       fill: "#ffffff",
     });
-  
+
     this.timeButton = this.add
       .image(buttonX, buttonY, "timeAdvanceButton")
       .setInteractive()
       .on("pointerdown", () => {
         this.advanceTime();
       });
-  
+
     // Add Instructions button
     const instructionsButtonX = this.game.config.width - 150;
     const instructionsButtonY = 50;
@@ -417,7 +484,7 @@ export default class GameScene extends Phaser.Scene {
       .on("pointerdown", () => {
         this.showInstructionsPopup();
       });
-  
+
     this.load.on("complete", () => {
       console.log("Loading tutorial scenario...");
       this.scenarioManager.loadScenario("tutorial");
@@ -430,7 +497,7 @@ export default class GameScene extends Phaser.Scene {
         loop: true,
       });
     });
-  
+
     this.load.start();
   }
 
@@ -446,7 +513,7 @@ export default class GameScene extends Phaser.Scene {
       0.8
     );
     this.popupBackground.setDepth(10);
-  
+
     // Add instructions text
     const instructionsText = `
       Instructions:
@@ -472,7 +539,7 @@ export default class GameScene extends Phaser.Scene {
         to other plants
       Click [Close] to close the instructions.
     `;
-  
+
     this.instructionsContent = this.add.text(
       this.game.config.width / 2 - 300,
       this.game.config.height / 2 - 250,
@@ -480,7 +547,7 @@ export default class GameScene extends Phaser.Scene {
       { font: "18px Arial", fill: "#ffffff", wordWrap: { width: 400 } }
     );
     this.instructionsContent.setDepth(11);
-  
+
     // Add a "Close" button
     this.closeButton = this.add
       .text(
@@ -532,7 +599,7 @@ export default class GameScene extends Phaser.Scene {
           rect,
           plantSprite: null,
         });
-        rect.setDepth(-1); 
+        rect.setDepth(-1);
       }
     }
     console.log("Grid created:", this.grid);
@@ -540,11 +607,11 @@ export default class GameScene extends Phaser.Scene {
 
   recreateGrid() {
     // Clear existing grid elements
-    this.grid.forEach(cell => {
+    this.grid.forEach((cell) => {
       if (cell.rect) cell.rect.destroy();
       if (cell.plantSprite) cell.plantSprite.destroy();
     });
-    
+
     this.grid = [];
     for (let y = 0; y < this.gridSize; y++) {
       for (let x = 0; x < this.gridSize; x++) {
@@ -569,32 +636,38 @@ export default class GameScene extends Phaser.Scene {
       this.reapPlant();
       this.pushCurrentStateToUndoStack();
     });
-  
+
     this.input.keyboard.on("keydown-S", () => {
       this.sowPlant();
       this.pushCurrentStateToUndoStack();
     });
-  
+
     this.input.keyboard.on("keydown", (event) => {
       let moved = false;
       if (event.code === "ArrowLeft" && this.player.gridX > 0) {
         this.player.move(-1, 0);
         moved = true;
-      } else if (event.code === "ArrowRight" && this.player.gridX < this.gridSize - 1) {
+      } else if (
+        event.code === "ArrowRight" &&
+        this.player.gridX < this.gridSize - 1
+      ) {
         this.player.move(1, 0);
         moved = true;
       } else if (event.code === "ArrowUp" && this.player.gridY > 0) {
         this.player.move(0, -1);
         moved = true;
-      } else if (event.code === "ArrowDown" && this.player.gridY < this.gridSize - 1) {
+      } else if (
+        event.code === "ArrowDown" &&
+        this.player.gridY < this.gridSize - 1
+      ) {
         this.player.move(0, 1);
         moved = true;
       }
-  
+
       if (moved) {
         this.pushCurrentStateToUndoStack();
       }
-  
+
       if (!event.shiftKey) {
         // Save slots (1-5)
         if (event.code === "Digit1") this.saveGame(1);
@@ -610,7 +683,7 @@ export default class GameScene extends Phaser.Scene {
         if (event.code === "Digit4") this.loadGame(4);
         if (event.code === "Digit5") this.loadGame(5);
       }
-  
+
       if (event.ctrlKey || event.metaKey) {
         if (event.code === "KeyZ") {
           this.undo();
@@ -620,7 +693,7 @@ export default class GameScene extends Phaser.Scene {
       }
     });
   }
-  
+
   pushCurrentStateToUndoStack() {
     const currentState = this.getCurrentState();
     this.undoStack.push(JSON.parse(JSON.stringify(currentState)));
@@ -630,7 +703,7 @@ export default class GameScene extends Phaser.Scene {
     }
     console.log("Undo stack:", this.undoStack);
   }
-  
+
   undo() {
     if (this.undoStack.length === 0) {
       console.log("Nothing to undo");
@@ -643,7 +716,7 @@ export default class GameScene extends Phaser.Scene {
     this.restoreState(lastState);
     this.updateGridVisuals();
   }
-  
+
   redo() {
     if (this.redoStack.length === 0) {
       console.log("Nothing to redo");
@@ -718,31 +791,30 @@ export default class GameScene extends Phaser.Scene {
 
   autoSaveGame() {
     try {
-        const gameState = this.getCurrentState();
-        const compressedState = LZString.compress(JSON.stringify(gameState)); // Use global LZString
-        localStorage.setItem("autoSave", compressedState);
-        console.log("Game auto-saved (compressed)");
+      const gameState = this.getCurrentState();
+      const compressedState = LZString.compress(JSON.stringify(gameState)); // Use global LZString
+      localStorage.setItem("autoSave", compressedState);
+      console.log("Game auto-saved (compressed)");
     } catch (e) {
-        console.error("Auto-save failed:", e.message);
-    }
-}
-
-
-collectPlantData() {
-  const plants = [];
-  for (let y = 0; y < this.gridSize; y++) {
-    for (let x = 0; x < this.gridSize; x++) {
-      const plantType = this.gridState.getPlantType(x, y);
-      const growthLevel = this.gridState.getGrowthLevel(x, y);
-      const waterLevel = this.gridState.getWaterLevel(x, y);
-      const sunLevel = this.gridState.getSunLevel(x, y);
-      if (plantType !== 0) {
-        plants.push({ x, y, plantType, growthLevel, waterLevel, sunLevel });
-      }
+      console.error("Auto-save failed:", e.message);
     }
   }
-  return plants;
-}
+
+  collectPlantData() {
+    const plants = [];
+    for (let y = 0; y < this.gridSize; y++) {
+      for (let x = 0; x < this.gridSize; x++) {
+        const plantType = this.gridState.getPlantType(x, y);
+        const growthLevel = this.gridState.getGrowthLevel(x, y);
+        const waterLevel = this.gridState.getWaterLevel(x, y);
+        const sunLevel = this.gridState.getSunLevel(x, y);
+        if (plantType !== 0) {
+          plants.push({ x, y, plantType, growthLevel, waterLevel, sunLevel });
+        }
+      }
+    }
+    return plants;
+  }
 
   saveGame(slot) {
     try {
@@ -772,13 +844,23 @@ collectPlantData() {
 
   loadGame(slot) {
     try {
-      const savedState = localStorage.getItem(slot === "autoSave" ? "autoSave" : `saveSlot${slot}`);
+      const savedState = localStorage.getItem(
+        slot === "autoSave" ? "autoSave" : `saveSlot${slot}`
+      );
       if (savedState) {
         const decompressedState = JSON.parse(LZString.decompress(savedState));
         this.restoreState(decompressedState);
-        console.log(`Game loaded from ${slot === "autoSave" ? "auto-save" : `slot ${slot}`}`);
+        console.log(
+          `Game loaded from ${
+            slot === "autoSave" ? "auto-save" : `slot ${slot}`
+          }`
+        );
       } else {
-        console.log(`No save found in ${slot === "autoSave" ? "auto-save" : `slot ${slot}`}`);
+        console.log(
+          `No save found in ${
+            slot === "autoSave" ? "auto-save" : `slot ${slot}`
+          }`
+        );
       }
     } catch (e) {
       console.error("Load game failed:", e.message);
@@ -797,83 +879,102 @@ collectPlantData() {
       this.gridState.setWaterLevel(cell.x, cell.y, 5);
       this.gridState.setSunLevel(cell.x, cell.y, 5);
 
-
       const frameName = plantType.frameIndices[0];
       console.log("FRAME NAME Sow", frameName);
-      cell.plantSprite = this.add.sprite(cell.rect.x, cell.rect.y, 'plants', frameName).setScale(2);
+      cell.plantSprite = this.add
+        .sprite(cell.rect.x, cell.rect.y, "plants", frameName)
+        .setScale(2);
       cell.plantSprite.setDepth(0.5);
-      console.log(`Planted ${plantTypes[plantTypeIndex].name} at (${cell.x}, ${cell.y})`);
+      console.log(
+        `Planted ${plantTypes[plantTypeIndex].name} at (${cell.x}, ${cell.y})`
+      );
       this.updatePlantVisuals();
       this.pushCurrentStateToUndoStack();
     } else {
       console.log("A plant already exists here.");
     }
   }
-  
-reapPlant() {
-  const cell = this.grid.find(
-    (c) => c.x === this.player.gridX && c.y === this.player.gridY
-  );
-  if (cell && this.gridState.getPlantType(cell.x, cell.y) !== 0) {
-    this.gridState.setPlantType(cell.x, cell.y, 0);
-    this.gridState.setGrowthLevel(cell.x, cell.y, 0);
-    if (cell.plantSprite) {
-      cell.plantSprite.destroy();
-      cell.plantSprite = null;
-    }
-    console.log(`Reaped plant at (${cell.x}, ${cell.y})`);
-    this.updatePlantVisuals();
-    this.pushCurrentStateToUndoStack();
-  } else {
-    console.log("No plant to reap here.");
-  }
-}
 
-updateGridVisuals() {
-  this.grid.forEach(cell => {
-    const sunLevel = this.gridState.getSunLevel(cell.x, cell.y);
-    const waterLevel = this.gridState.getWaterLevel(cell.x, cell.y);
-
-    // Update plant sprites
-    this.updatePlantVisuals();
-
-    // Update cell colors based on sun and water levels
-    const sunColor = Phaser.Display.Color.GetColor(255, 255 * (sunLevel / 4), 0);
-    const waterColor = Phaser.Display.Color.GetColor(0, 0, 255 * (waterLevel / 4));
-    const blendedColor = Phaser.Display.Color.Interpolate.ColorWithColor(
-      Phaser.Display.Color.ValueToColor(sunColor),
-      Phaser.Display.Color.ValueToColor(waterColor),
-      255,
-      128
+  reapPlant() {
+    const cell = this.grid.find(
+      (c) => c.x === this.player.gridX && c.y === this.player.gridY
     );
-    cell.rect.setFillStyle(Phaser.Display.Color.GetColor(blendedColor.r, blendedColor.g, blendedColor.b));
-  });
-}
-  
-updatePlantVisuals() {
-  this.grid.forEach(cell => {
-    const plantTypeIndex = this.gridState.getPlantType(cell.x, cell.y);
-    const growthLevel = this.gridState.getGrowthLevel(cell.x, cell.y);
-    if (plantTypeIndex !== 0) {
-      const plantType = plantTypes[plantTypeIndex];
-      if (!cell.plantSprite) {
-        cell.plantSprite = this.add.sprite(cell.rect.x, cell.rect.y, 'plants').setScale(2);
-        cell.plantSprite.setDepth(0.5);
+    if (cell && this.gridState.getPlantType(cell.x, cell.y) !== 0) {
+      this.gridState.setPlantType(cell.x, cell.y, 0);
+      this.gridState.setGrowthLevel(cell.x, cell.y, 0);
+      if (cell.plantSprite) {
+        cell.plantSprite.destroy();
+        cell.plantSprite = null;
       }
-      let frameName;
-      if (growthLevel === 1) {
-        frameName = plantType.frameIndices[0]; // Initial frame
-      } else {
-        frameName = plantType.frameIndices[growthLevel - 1]; // Skip the second frame and use subsequent frames in order
-      }
-      console.log("FRAME NAME Update", frameName);
-      cell.plantSprite.setFrame(frameName);
-    } else if (cell.plantSprite) {
-      cell.plantSprite.destroy();
-      cell.plantSprite = null;
+      console.log(`Reaped plant at (${cell.x}, ${cell.y})`);
+      this.updatePlantVisuals();
+      this.pushCurrentStateToUndoStack();
+    } else {
+      console.log("No plant to reap here.");
     }
-  });
-}
+  }
+
+  updateGridVisuals() {
+    this.grid.forEach((cell) => {
+      const sunLevel = this.gridState.getSunLevel(cell.x, cell.y);
+      const waterLevel = this.gridState.getWaterLevel(cell.x, cell.y);
+
+      // Update plant sprites
+      this.updatePlantVisuals();
+
+      // Update cell colors based on sun and water levels
+      const sunColor = Phaser.Display.Color.GetColor(
+        255,
+        255 * (sunLevel / 4),
+        0
+      );
+      const waterColor = Phaser.Display.Color.GetColor(
+        0,
+        0,
+        255 * (waterLevel / 4)
+      );
+      const blendedColor = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(sunColor),
+        Phaser.Display.Color.ValueToColor(waterColor),
+        255,
+        128
+      );
+      cell.rect.setFillStyle(
+        Phaser.Display.Color.GetColor(
+          blendedColor.r,
+          blendedColor.g,
+          blendedColor.b
+        )
+      );
+    });
+  }
+
+  updatePlantVisuals() {
+    this.grid.forEach((cell) => {
+      const plantTypeIndex = this.gridState.getPlantType(cell.x, cell.y);
+      const growthLevel = this.gridState.getGrowthLevel(cell.x, cell.y);
+      if (plantTypeIndex !== 0) {
+        const plantType = plantTypes[plantTypeIndex];
+        if (!cell.plantSprite) {
+          cell.plantSprite = this.add
+            .sprite(cell.rect.x, cell.rect.y, "plants")
+            .setScale(2);
+          cell.plantSprite.setDepth(0.5);
+        }
+        let frameName;
+        if (growthLevel === 1) {
+          frameName = plantType.frameIndices[0]; // Initial frame
+        } else {
+          frameName = plantType.frameIndices[growthLevel - 1]; // Skip the second frame and use subsequent frames in order
+        }
+        console.log("FRAME NAME Update", frameName);
+        cell.plantSprite.setFrame(frameName);
+      } else if (cell.plantSprite) {
+        cell.plantSprite.destroy();
+        cell.plantSprite = null;
+      }
+    });
+  }
 
   handleTimeBasedEvents() {
     console.log("Handling events for gameTime:", this.gameTime);
@@ -882,7 +983,7 @@ updatePlantVisuals() {
         // Randomly update sun and water levels for all cells
         this.gridState.setSunLevel(x, y, Phaser.Math.Between(0, 4));
         this.gridState.setWaterLevel(x, y, Phaser.Math.Between(0, 4));
-  
+
         const plantType = this.gridState.getPlantType(x, y);
         if (plantType !== 0) {
           this.plantGrowth(x, y, plantType);
@@ -891,12 +992,14 @@ updatePlantVisuals() {
     }
     this.updateGridVisuals();
   }
-  
+
   plantGrowth(x, y, plantTypeIndex) {
     const plantType = plantTypes[plantTypeIndex];
     const newGrowthLevel = plantType.grow(x, y, this.gridState, this.gameTime);
     if (newGrowthLevel > this.gridState.getGrowthLevel(x, y)) {
-      console.log(`${plantType.name} at (${x}, ${y}) grew to level ${newGrowthLevel}`);
+      console.log(
+        `${plantType.name} at (${x}, ${y}) grew to level ${newGrowthLevel}`
+      );
       this.updatePlantVisuals();
     }
   }
@@ -906,7 +1009,7 @@ updatePlantVisuals() {
     plantTypes.push(newPlantType);
     return plantTypes.length - 1; // Return the index of the new plant type
   }
-  
+
   removePlantType(index) {
     if (index >= 0 && index < plantTypes.length) {
       plantTypes.splice(index, 1);
@@ -922,7 +1025,7 @@ updatePlantVisuals() {
       gridSize: this.gridSize,
       playerPosition: { x: this.player.gridX, y: this.player.gridY },
       plants: this.collectPlantData(),
-      scenarioName: this.scenarioManager.activeScenario.scenarioName
+      scenarioName: this.scenarioManager.activeScenario.scenarioName,
     };
   }
 
