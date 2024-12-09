@@ -490,13 +490,18 @@ export default class GameScene extends Phaser.Scene {
     this.languageManager = LanguageManager.getInstance();
   }
 
-  create(data: { playerState?: { gridX: number; gridY: number }; language?: string } = {}): void {
+  create(
+    data: {
+      playerState?: { gridX: number; gridY: number };
+      language?: string;
+    } = {}
+  ): void {
     const { playerState, language } = data;
-  
+
     if (language) {
       this.languageManager.setLanguage(language);
     }
-  
+
     // Recreate the player at the saved position
     if (playerState) {
       this.player = new Player(
@@ -518,7 +523,7 @@ export default class GameScene extends Phaser.Scene {
       this.player.gridX = 0;
       this.player.gridY = 0;
     }
-  
+
     const buttonX: number = 50;
     const buttonY: number = this.game.config.height / 6;
 
@@ -580,7 +585,7 @@ export default class GameScene extends Phaser.Scene {
       color: "#ffffff",
     });
 
-    const languages: Language[] = ["en", "es", "ar", "zh"];
+    const languages: Language[] = ["English", "Espanol", "عربي", "中國人"];
     languages.forEach((lang, index) => {
       this.add
         .text(10, 200 + index * 30, lang.toUpperCase(), {
