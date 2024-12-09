@@ -1,9 +1,11 @@
+import Phaser from "phaser";
+
 export default class BootScene extends Phaser.Scene {
   constructor() {
     super("bootScene");
   }
 
-  preload() {
+  preload(): void {
     // Set the path for assets
     this.load.setPath("./assets/");
 
@@ -24,7 +26,7 @@ export default class BootScene extends Phaser.Scene {
     this.load.json("challengeScenario", "challenge_scenario.json");
   }
 
-  create() {
+  create(): void {
     // Transition to the main game scene
     this.scene.start("gameScene");
   }

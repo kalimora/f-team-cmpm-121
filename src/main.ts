@@ -1,16 +1,16 @@
 import Phaser from "phaser";
-//import scenes
-import BootScene from "./scenes/BootScene.js";
-import GameScene from "./scenes/GameScene.js";
+// Import scenes
+import BootScene from "./scenes/BootScene.ts";
+import GameScene from "./scenes/GameScene.ts";
 
-const config = {
+const config: Phaser.Types.Core.GameConfig = {
   parent: "phaser-game",
   type: Phaser.WEBGL,
   width: 800,
   height: 600,
   backgroundColor: "#836539",
   scene: [BootScene, GameScene],
-  pixelArt: true, // prevent pixel art from getting blurred when scaled
+  pixelArt: true, // Prevent pixel art from getting blurred when scaled
   physics: {
     default: "arcade",
     arcade: {
@@ -23,6 +23,7 @@ const config = {
   },
 };
 
+// Ensure scene assignment maintains type integrity
 config.scene = [BootScene, GameScene];
 
 const _game = new Phaser.Game(config);
