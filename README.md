@@ -134,14 +134,15 @@ Overall, we shifted our approach to focus on simplicity, collaboration, and iter
 ## F1 Documentation
 
 ### F0 No changes since the last assignment. All requirements are met for F0. 
-### Memory allocation strategy illustration: 
-![bytearray](https://github.com/user-attachments/assets/100a548f-265a-4f67-b830-03adab776e40)
 
 ### F1.a - Everyone
 - We made sure the game's grid state is stored in a single contiguous byte array.
 - We changed our grid state to use a byte array as the main format.
 - We chose an AoS format and each cell's data (water levels, sun levels, cell type, and plant growth) is stored one after another in the array.
 - We added functions to convert the byte array into a readable format when needed, like for gameplay logic or rendering.
+
+Memory allocation strategy illustration: 
+![bytearray](https://github.com/user-attachments/assets/100a548f-265a-4f67-b830-03adab776e40)
 
 ### F1.b - Kaylee
 - I made a saveGame function to save the game, player position, and plant data.
@@ -195,6 +196,11 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
 
 ### F0+F1 No major changes were made in for F0 and F1, so the F0 and F1 requirements are still met in F2. 
 
+### F2.a - Everyone
+- Created scenarios.dsl file as a draft of what design we wanted the scenarios to look like.
+- Created json files that depicted different scenarios for the game. There is a tutorial scenario and a challenge scenario.
+- Imported the scenarios into the gameScene.js file. Along with that, we implemented the code by creating functions inside of the scenarioManager class. These functions include handTimeBasedEvents, loadScenario, applyingStartingConditions, handleScheduledEvents, checkVictoryConditions, and loadNextScenario.
+- Updated our previous code to work with the loading and saving within different scenarios (ex. recreating the grid of a scenario).
 #### Scenario Design:
 ```json
 {
@@ -233,17 +239,158 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
   "nextScenario": "challenge"
 }
 ```
-### F2.a - Everyone
-- Created scenarios.dsl file as a draft of what design we wanted the scenarios to look like.
-- Created json files that depicted different scenarios for the game. There is a tutorial scenario and a challenge scenario.
-- Imported the scenarios into the gameScene.js file. Along with that, we implemented the code by creating functions inside of the scenarioManager class. These functions include handTimeBasedEvents, loadScenario, applyingStartingConditions, handleScheduledEvents, checkVictoryConditions, and loadNextScenario.
-- Updated our previous code to work with the loading and saving within different scenarios (ex. recreating the grid of a scenario). 
 
 ### F2.b - Everyone 
 - Created a PlantType class, which dealt with the growing conditions and the special abilities.
 - Created the new plant types in a const condition.
 - Created new functions for our plant type index (ex. addPlantType, removePlantType) 
 - Updated our previous code to work with these plant types (ex. sowPlant, plantGrowth)
+```javascript
+class PlantType {
+  constructor(name, growthConditions, specialAbility, frameIndices) {
+    this.name = name;
+    this.growthConditions = growthConditions;
+    this.specialAbility = specialAbility;
+    this.frameIndices = frameIndices;
+  }
+
+  canGrow(x, y, gridState, gameTime) {
+    return this.growthConditions(x, y, gridState, gameTime);
+  }
+
+  applySpecialAbility(x, y, gridState) {
+    if (this.specialAbility) {
+      this.specialAbility(x, y, gridState);
+    }
+  }
+
+  grow(x, y, gridState, gameTime) {
+    const currentGrowthLevel = gridState.getGrowthLevel(x, y);
+    if (currentGrowthLevel < 5 && this.canGrow(x, y, gridState, gameTime)) {
+      const newGrowthLevel = currentGrowthLevel + 1;
+      gridState.setGrowthLevel(x, y, newGrowthLevel);
+      this.applySpecialAbility(x, y, gridState);
+      return newGrowthLevel;
+    }
+    return currentGrowthLevel;
+  }
+}
+
+const plantTypes = [
+  new PlantType(
+    "Sun Lover",
+    (x, y, gridState, gameTime) =>
+      gridState.getSunLevel(x, y) > 3 &&
+      gridState.getWaterLevel(x, y) < 3 &&
+      gameTime % 2 === 0,
+    (x, y, gridState) => {
+      // Special ability: Increase sun level in adjacent cells
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
+      neighbors.forEach(([nx, ny]) => {
+        if (
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+        ) {
+          const currentSun = gridState.getSunLevel(nx, ny);
+          gridState.setSunLevel(nx, ny, Math.min(10, currentSun + 1));
+        }
+      });
+    },
+    [14, 16, 17, 18, 19] // carrot
+  ),
+  new PlantType(
+    "Water Lover",
+    (x, y, gridState, gameTime) =>
+      gridState.getWaterLevel(x, y) > 3 &&
+      gridState.getSunLevel(x, y) < 3 &&
+      gameTime % 3 === 0,
+    (x, y, gridState) => {
+      // Special ability: Increase water level in adjacent cells
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
+      neighbors.forEach(([nx, ny]) => {
+        if (
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+        ) {
+          const currentWater = gridState.getWaterLevel(nx, ny);
+          gridState.setWaterLevel(nx, ny, Math.min(10, currentWater + 1));
+        }
+      });
+    },
+    [21, 23, 24, 25, 26] // cabbage
+  ),
+  new PlantType(
+    "Balanced",
+    (x, y, gridState) =>
+      Math.abs(gridState.getSunLevel(x, y) - gridState.getWaterLevel(x, y)) <=
+      1,
+    (x, y, gridState) => {
+      // Special ability: Balance sun and water levels in current cell
+      const sunLevel = gridState.getSunLevel(x, y);
+      const waterLevel = gridState.getWaterLevel(x, y);
+      const average = Math.round((sunLevel + waterLevel) / 2);
+      gridState.setSunLevel(x, y, average);
+      gridState.setWaterLevel(x, y, average);
+    },
+    [28, 30, 31, 32, 33] // plum
+  ),
+  new PlantType(
+    "Neighbor Dependent",
+    (x, y, gridState) => {
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ].filter(
+        ([nx, ny]) =>
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+      );
+      return neighbors.some(([nx, ny]) => gridState.getPlantType(nx, ny) !== 0);
+    },
+    (x, y, gridState) => {
+      // Special ability: Boost growth of neighboring plants
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
+      neighbors.forEach(([nx, ny]) => {
+        if (
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+        ) {
+          const currentGrowth = gridState.getGrowthLevel(nx, ny);
+          if (currentGrowth > 0 && currentGrowth < 5) {
+            gridState.setGrowthLevel(nx, ny, currentGrowth + 1);
+          }
+        }
+      });
+    },
+    [35, 37, 38, 39, 40] // eggplant
+  ),
+];
+```
 
 ### F2.c - Everyone
 - **Objective:** Adapted the project from JavaScript to TypeScript to enhance type safety and maintainability.  
@@ -286,12 +433,21 @@ Adapting to the F2 requirements taught us the importance of flexibility and coll
 ### F0+F1+F2 No major changes were made in for F0, F1, and F2, so the requirements are still met in F3. 
 
 ### F3.a - Everyone
--
+- We ensured that all text visible to the player can be translated into different written languages.
+- We avoided hard-coding any English text into the game, allowing for future localization into various languages.
+- We designed UI elements to be flexible, ensuring they can accommodate text expansion or contraction when different languages are selected.
 
 ### F3.b - Everyone
--
+- We localized the game to support three different written languages.
+  -  One language was chosen that uses a logographic script (Chinese).
+  -  One language was chosen that uses a right-to-left script (Arabic).
+  -  The third language is a common left-to-right script (Spanish).
+- All in-game text has been fully localized, ensuring proper support for the different scripts.
 
 ### F3.c - Everyone
--
+- Unable to complete due to time constraints.
+
+### F3.d - Everyone
+- Unable to complete due to time constraints. 
 
 Feel free to adapt this file as we change our objectives!
