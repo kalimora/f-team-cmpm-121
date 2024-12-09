@@ -140,7 +140,8 @@ Overall, we shifted our approach to focus on simplicity, collaboration, and iter
 - We changed our grid state to use a byte array as the main format.
 - We chose an AoS format and each cell's data (water levels, sun levels, cell type, and plant growth) is stored one after another in the array.
 - We added functions to convert the byte array into a readable format when needed, like for gameplay logic or rendering.
-- ### Memory allocation strategy illustration: 
+
+Memory allocation strategy illustration: 
 ![bytearray](https://github.com/user-attachments/assets/100a548f-265a-4f67-b830-03adab776e40)
 
 ### F1.b - Kaylee
@@ -200,7 +201,6 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
 - Created json files that depicted different scenarios for the game. There is a tutorial scenario and a challenge scenario.
 - Imported the scenarios into the gameScene.js file. Along with that, we implemented the code by creating functions inside of the scenarioManager class. These functions include handTimeBasedEvents, loadScenario, applyingStartingConditions, handleScheduledEvents, checkVictoryConditions, and loadNextScenario.
 - Updated our previous code to work with the loading and saving within different scenarios (ex. recreating the grid of a scenario).
-- 
 #### Scenario Design:
 ```json
 {
@@ -245,6 +245,152 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
 - Created the new plant types in a const condition.
 - Created new functions for our plant type index (ex. addPlantType, removePlantType) 
 - Updated our previous code to work with these plant types (ex. sowPlant, plantGrowth)
+``` json
+class PlantType {
+  constructor(name, growthConditions, specialAbility, frameIndices) {
+    this.name = name;
+    this.growthConditions = growthConditions;
+    this.specialAbility = specialAbility;
+    this.frameIndices = frameIndices;
+  }
+
+  canGrow(x, y, gridState, gameTime) {
+    return this.growthConditions(x, y, gridState, gameTime);
+  }
+
+  applySpecialAbility(x, y, gridState) {
+    if (this.specialAbility) {
+      this.specialAbility(x, y, gridState);
+    }
+  }
+
+  grow(x, y, gridState, gameTime) {
+    const currentGrowthLevel = gridState.getGrowthLevel(x, y);
+    if (currentGrowthLevel < 5 && this.canGrow(x, y, gridState, gameTime)) {
+      const newGrowthLevel = currentGrowthLevel + 1;
+      gridState.setGrowthLevel(x, y, newGrowthLevel);
+      this.applySpecialAbility(x, y, gridState);
+      return newGrowthLevel;
+    }
+    return currentGrowthLevel;
+  }
+}
+
+const plantTypes = [
+  new PlantType(
+    "Sun Lover",
+    (x, y, gridState, gameTime) =>
+      gridState.getSunLevel(x, y) > 3 &&
+      gridState.getWaterLevel(x, y) < 3 &&
+      gameTime % 2 === 0,
+    (x, y, gridState) => {
+      // Special ability: Increase sun level in adjacent cells
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
+      neighbors.forEach(([nx, ny]) => {
+        if (
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+        ) {
+          const currentSun = gridState.getSunLevel(nx, ny);
+          gridState.setSunLevel(nx, ny, Math.min(10, currentSun + 1));
+        }
+      });
+    },
+    [14, 16, 17, 18, 19] // carrot
+  ),
+  new PlantType(
+    "Water Lover",
+    (x, y, gridState, gameTime) =>
+      gridState.getWaterLevel(x, y) > 3 &&
+      gridState.getSunLevel(x, y) < 3 &&
+      gameTime % 3 === 0,
+    (x, y, gridState) => {
+      // Special ability: Increase water level in adjacent cells
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
+      neighbors.forEach(([nx, ny]) => {
+        if (
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+        ) {
+          const currentWater = gridState.getWaterLevel(nx, ny);
+          gridState.setWaterLevel(nx, ny, Math.min(10, currentWater + 1));
+        }
+      });
+    },
+    [21, 23, 24, 25, 26] // cabbage
+  ),
+  new PlantType(
+    "Balanced",
+    (x, y, gridState) =>
+      Math.abs(gridState.getSunLevel(x, y) - gridState.getWaterLevel(x, y)) <=
+      1,
+    (x, y, gridState) => {
+      // Special ability: Balance sun and water levels in current cell
+      const sunLevel = gridState.getSunLevel(x, y);
+      const waterLevel = gridState.getWaterLevel(x, y);
+      const average = Math.round((sunLevel + waterLevel) / 2);
+      gridState.setSunLevel(x, y, average);
+      gridState.setWaterLevel(x, y, average);
+    },
+    [28, 30, 31, 32, 33] // plum
+  ),
+  new PlantType(
+    "Neighbor Dependent",
+    (x, y, gridState) => {
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ].filter(
+        ([nx, ny]) =>
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+      );
+      return neighbors.some(([nx, ny]) => gridState.getPlantType(nx, ny) !== 0);
+    },
+    (x, y, gridState) => {
+      // Special ability: Boost growth of neighboring plants
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
+      neighbors.forEach(([nx, ny]) => {
+        if (
+          nx >= 0 &&
+          nx < gridState.gridSize &&
+          ny >= 0 &&
+          ny < gridState.gridSize
+        ) {
+          const currentGrowth = gridState.getGrowthLevel(nx, ny);
+          if (currentGrowth > 0 && currentGrowth < 5) {
+            gridState.setGrowthLevel(nx, ny, currentGrowth + 1);
+          }
+        }
+      });
+    },
+    [35, 37, 38, 39, 40] // eggplant
+  ),
+];
+```
 
 ### F2.c - Everyone
 - **Objective:** Adapted the project from JavaScript to TypeScript to enhance type safety and maintainability.  
