@@ -187,11 +187,17 @@ Looking back on how we achieved the F1 requirements, our team made several adjus
 
 Adapting to the F1 requirements helped us build a more player-centric game, emphasizing user experience and feedback. It taught us the value of flexibility in both team roles and game design.
 
-### F2.a - Kaylee & Shea
--
+### F2.a - Everyone
+- Created scenarios.dsl file as a draft of what design we wanted the scenarios to look like.
+- Created json files that depicted different scenarios for the game. There is a tutorial scenario and a challenge scenario.
+- Imported the scenarios into the gameScene.js file. Along with that, we implemented the code by creating functions inside of the scenarioManager class. These functions include handTimeBasedEvents, loadScenario, applyingStartingConditions, handleScheduledEvents, checkVictoryConditions, and loadNextScenario.
+- Updated our previous code to work with the loading and saving within different scenarios (ex. recreating the grid of a scenario). 
 
-### F2.b - Kaylee & Celeste
--
+### F2.b - Kaylee & Shea 
+- Created a PlantType class, which dealt with the growing conditions and the special abilities.
+- Created the new plant types in a const condition.
+- Created new functions for our plant type index (ex. addPlantType, removePlantType) 
+- Updated our previous code to work with these plant types (ex. sowPlant, plantGrowth)
 
 ### F2.c - Samina & Hasina
 -
