@@ -193,6 +193,43 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
 
 ## F2 Documentation
 ### F0+F1 No major changes were made in for F0 and F1, so the F0 and F1 requirements are still met in F2. 
+### Scenario Design:
+```json
+{
+  "scenarioName": "Tutorial",
+  "startConditions": {
+    "gridSize": 3,
+    "playerPosition": [1, 1],
+    "plants": [
+      { "position": [0, 0], "type": 1, "growth": 1 },
+      { "position": [2, 2], "type": 2, "growth": 2 }
+    ]
+  },
+  "weather": {
+    "sunRange": [0, 6],
+    "waterRange": [0, 2]
+  },
+  "events": [
+    { "time": 5, "action": "addPlant", "details": { "position": [1, 1], "type": 3 } },
+    { "time": 10, "action": "increaseWater", "details": { "amount": 2 } }
+  ],
+  "victoryConditions": [
+    {
+      "type": "plantGrowth",
+      "details": {
+        "position": [1, 1],
+        "growthLevel": 3
+      }
+    },
+    {
+      "type": "totalPlants",
+      "details": {
+        "minCount": 3
+      }
+    }
+  ],
+  "nextScenario": "challenge"
+}
 
 ### F2.a - Everyone
 - Created scenarios.dsl file as a draft of what design we wanted the scenarios to look like.
