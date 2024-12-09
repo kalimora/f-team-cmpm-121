@@ -3,7 +3,6 @@ import tutorialScenario from "../scenarios/tutorial_scenario.json" assert { type
 import LanguageManager from "../managers/LanguageManager.ts";
 import Player from "../objects/Player.ts";
 import Phaser from "phaser";
-import LZString from "lz-string";
 
 class PlantType {
   name: string;
@@ -491,7 +490,35 @@ export default class GameScene extends Phaser.Scene {
     this.languageManager = LanguageManager.getInstance();
   }
 
-  create(): void {
+  create(data: { playerState?: { gridX: number; gridY: number }; language?: string } = {}): void {
+    const { playerState, language } = data;
+  
+    if (language) {
+      this.languageManager.setLanguage(language);
+    }
+  
+    // Recreate the player at the saved position
+    if (playerState) {
+      this.player = new Player(
+        this,
+        this.gridOrigin.x + playerState.gridX * this.cellSize,
+        this.gridOrigin.y + playerState.gridY * this.cellSize,
+        "player"
+      );
+      this.player.gridX = playerState.gridX;
+      this.player.gridY = playerState.gridY;
+    } else {
+      // Default player creation
+      this.player = new Player(
+        this,
+        this.gridOrigin.x,
+        this.gridOrigin.y,
+        "player"
+      );
+      this.player.gridX = 0;
+      this.player.gridY = 0;
+    }
+  
     const buttonX: number = 50;
     const buttonY: number = this.game.config.height / 6;
 
