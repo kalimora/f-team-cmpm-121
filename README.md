@@ -200,7 +200,41 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
 - Updated our previous code to work with these plant types (ex. sowPlant, plantGrowth)
 
 ### F2.c - Everyone
--
+- **Objective:** Adapted the project from JavaScript to TypeScript to enhance type safety and maintainability.  
+- Converted core modules (ex., `GameScene.js`) from JavaScript to TypeScript.
+- Used Vite as the build tool for faster development and seamless integration with TypeScript.
+- Used Brace to assist with translating JavaScript code to TypeScript syntax.  
+- Tested the TypeScript version to ensure full compatibility with the original JavaScript implementation.
+
+### Reflection
+Looking back on how we achieved the F2 requirements, our team made several adjustments:
+
+1. **Switch to TypeScript and Vite**:  
+   Initially, we planned to stick with JavaScript, but transitioning to TypeScript provided type safety and better scalability. Vite was introduced as our build tool to speed up development and simplify the integration process.
+
+2. **Revised Tools and Libraries**:  
+   Moving to TypeScript required re-evaluating our libraries and tools. Some libraries used in JavaScript needed TypeScript-compatible alternatives, which altered our initial setup.
+
+3. **Evolution of Team Roles**:  
+   The transition to TypeScript required more collaboration across roles. We worked together to refactor code with type annotations and interfaces. This blurred the lines between frontend and backend roles, fostering a more dynamic workflow.
+
+4. **Improved Modularity for Feedback**:  
+   Thinking about player feedback during the adaptation process led us to refactor our code for better modularity. For example, functions like `plantGrowth` and `sowPlant` were enhanced to provide clearer feedback through TypeScript interfaces.
+
+5. **Iterative Testing for TypeScript**:  
+   We underestimated the learning curve for TypeScript syntax and debugging. Regular testing helped us identify and resolve type-related issues early, ensuring compatibility with the JavaScript implementation.
+
+6. **Simplified Transition Plan**:  
+   Initially, we aimed to rewrite entire modules in one go, but we pivoted to a phased approach. This allowed us to maintain a working game while gradually integrating TypeScript.
+
+### Key Takeaways
+- **TypeScript Benefits**: The switch improved code maintainability and reduced runtime errors, making the project more robust.
+- **Tool Flexibility**: Adopting Vite and TypeScript-compatible libraries streamlined development.
+- **Collaboration Growth**: The transition fostered better teamwork, with team members supporting each other during the learning process.
+- **Iterative Progress**: A phased transition helped us adapt without disrupting the game’s functionality.
+
+Adapting to the F2 requirements taught us the importance of flexibility and collaboration when integrating new technologies, ultimately enhancing the project's structure and maintainability.
+
 
 ## F3 Documentation
 ### F3.a - Everyone
