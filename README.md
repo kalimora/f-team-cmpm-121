@@ -448,6 +448,19 @@ Adapting to the F2 requirements taught us the importance of flexibility and coll
 - Unable to complete due to time constraints.
 
 ### F3.d - Everyone
-- Unable to complete due to time constraints. 
+- Unable to complete due to time constraints.
 
-Feel free to adapt this file as we change our objectives!
+### Internationalization
+We implemented a Language Manager class which was responsible for finding the correct translation for strings that were all predefined in a JSON for each language. When the game is loaded an instance of LanguageManager is created, then if the user selects a language other than English, the scene restarts with the selected language. The Language Manager has a method (t) that finds the correct value based on the key for that particular interface.
+
+### Localization
+The three languages that we picked were Spanish, Arabic, and Chinese. We mainly used our English Json file and asked Chatgpt to translate it into different languages, which was the easiest route for all of us. Switching the languages in our game is done by clicking the language text buttons.  
+
+### Mobile Installation
+Unable to complete due to time constraints.
+
+### Mobile Play (Offline)
+Unable to complete due to time constraints.
+
+## Reflection
+Our approach to meeting the F3 requirements led to a rethinking of what was possible in our time frame and our sanity. The localization took us time, and we were lost after the language shift from the last assignment. We were not able to finish the mobile element of the requirements for the assignment, and we all took into consideration how this would affect our grades. Overall, we did not use our roles as we thought we did, and our team did rely on one another to understand what we were supposed to accomplish during each requirement. Overall, the game is meeting the previous requirements, which we all are very proud of as a team. 
