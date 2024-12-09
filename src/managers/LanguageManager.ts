@@ -23,13 +23,13 @@ class LanguageManager {
   public setLanguage(language: Language): void {
     this.currentLanguage = language;
     switch (language) {
-      case "es":
+      case "Espanol":
         this.translations = es;
         break;
-      case "ar":
+      case "عربي":
         this.translations = ar;
         break;
-      case "zh":
+      case "中國人":
         this.translations = zh;
         break;
       default:
