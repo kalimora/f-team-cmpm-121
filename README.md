@@ -232,11 +232,7 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
   ],
   "nextScenario": "challenge"
 }
-
-```markdown
-```json
-{ "key": "value" }
-
+```
 ### F2.a - Everyone
 - Created scenarios.dsl file as a draft of what design we wanted the scenarios to look like.
 - Created json files that depicted different scenarios for the game. There is a tutorial scenario and a challenge scenario.
