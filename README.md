@@ -245,7 +245,7 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
 - Created the new plant types in a const condition.
 - Created new functions for our plant type index (ex. addPlantType, removePlantType) 
 - Updated our previous code to work with these plant types (ex. sowPlant, plantGrowth)
-``` json
+```javascript
 class PlantType {
   constructor(name, growthConditions, specialAbility, frameIndices) {
     this.name = name;
