@@ -45,7 +45,7 @@ const plantTypes = [
         }
       });
     },
-    [14,16,17,18,19,20] // carrot
+    [14,16,17,18,19] // carrot
   ),
   new PlantType("Water Lover", 
     (x, y, gridState, gameTime) => gridState.getWaterLevel(x, y) > 3 && gridState.getSunLevel(x, y) < 3 && gameTime % 3 === 0,
@@ -59,7 +59,7 @@ const plantTypes = [
         }
       });
     },
-    [21, 23, 24, 25, 26, 27] // cabbage
+    [21, 23, 24, 25, 26] // cabbage
   ),
   new PlantType("Balanced", 
     (x, y, gridState) => Math.abs(gridState.getSunLevel(x, y) - gridState.getWaterLevel(x, y)) <= 1,
@@ -71,7 +71,7 @@ const plantTypes = [
       gridState.setSunLevel(x, y, average);
       gridState.setWaterLevel(x, y, average);
     },
-    [28,30,31,32,33,34] // plum
+    [28,30,31,32,33] // plum
   ),
   new PlantType("Neighbor Dependent", 
     (x, y, gridState) => {
@@ -92,7 +92,7 @@ const plantTypes = [
         }
       });
     },
-    [37,39,40,41,42,43] // eggplant
+    [35,37,38,39,40] // eggplant
   )
 ];
 
@@ -835,25 +835,7 @@ updateGridVisuals() {
     const waterLevel = this.gridState.getWaterLevel(cell.x, cell.y);
 
     // Update plant sprites
-    const plantTypeIndex = this.gridState.getPlantType(cell.x, cell.y);
-    const growthLevel = this.gridState.getGrowthLevel(cell.x, cell.y);
-    if (plantTypeIndex !== 0) {
-      const plantType = plantTypes[plantTypeIndex];
-      if (!cell.plantSprite) {
-        cell.plantSprite = this.add.sprite(cell.rect.x, cell.rect.y, 'plants').setScale(2);
-        cell.plantSprite.setDepth(0.5);
-      }
-      let frameIndex;
-      if (growthLevel === 1) {
-        frameIndex = plantType.frameIndices[0]; // Initial frame
-      } else {
-        frameIndex = plantType.frameIndices[growthLevel]; // Skip the second frame and use subsequent frames in order
-      }
-      cell.plantSprite.setFrame(frameIndex);
-    } else if (cell.plantSprite) {
-      cell.plantSprite.destroy();
-      cell.plantSprite = null;
-    }
+    this.updatePlantVisuals();
 
     // Update cell colors based on sun and water levels
     const sunColor = Phaser.Display.Color.GetColor(255, 255 * (sunLevel / 4), 0);
@@ -882,7 +864,7 @@ updatePlantVisuals() {
       if (growthLevel === 1) {
         frameName = plantType.frameIndices[0]; // Initial frame
       } else {
-        frameName = plantType.frameIndices[growthLevel]; // Skip the second frame and use subsequent frames in order
+        frameName = plantType.frameIndices[growthLevel - 1]; // Skip the second frame and use subsequent frames in order
       }
       console.log("FRAME NAME Update", frameName);
       cell.plantSprite.setFrame(frameName);
