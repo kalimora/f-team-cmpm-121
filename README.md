@@ -134,14 +134,14 @@ Overall, we shifted our approach to focus on simplicity, collaboration, and iter
 ## F1 Documentation
 
 ### F0 No changes since the last assignment. All requirements are met for F0. 
-### Memory allocation strategy illustration: 
-![bytearray](https://github.com/user-attachments/assets/100a548f-265a-4f67-b830-03adab776e40)
 
 ### F1.a - Everyone
 - We made sure the game's grid state is stored in a single contiguous byte array.
 - We changed our grid state to use a byte array as the main format.
 - We chose an AoS format and each cell's data (water levels, sun levels, cell type, and plant growth) is stored one after another in the array.
 - We added functions to convert the byte array into a readable format when needed, like for gameplay logic or rendering.
+- ### Memory allocation strategy illustration: 
+![bytearray](https://github.com/user-attachments/assets/100a548f-265a-4f67-b830-03adab776e40)
 
 ### F1.b - Kaylee
 - I made a saveGame function to save the game, player position, and plant data.
@@ -195,6 +195,12 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
 
 ### F0+F1 No major changes were made in for F0 and F1, so the F0 and F1 requirements are still met in F2. 
 
+### F2.a - Everyone
+- Created scenarios.dsl file as a draft of what design we wanted the scenarios to look like.
+- Created json files that depicted different scenarios for the game. There is a tutorial scenario and a challenge scenario.
+- Imported the scenarios into the gameScene.js file. Along with that, we implemented the code by creating functions inside of the scenarioManager class. These functions include handTimeBasedEvents, loadScenario, applyingStartingConditions, handleScheduledEvents, checkVictoryConditions, and loadNextScenario.
+- Updated our previous code to work with the loading and saving within different scenarios (ex. recreating the grid of a scenario).
+- 
 #### Scenario Design:
 ```json
 {
@@ -233,11 +239,6 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
   "nextScenario": "challenge"
 }
 ```
-### F2.a - Everyone
-- Created scenarios.dsl file as a draft of what design we wanted the scenarios to look like.
-- Created json files that depicted different scenarios for the game. There is a tutorial scenario and a challenge scenario.
-- Imported the scenarios into the gameScene.js file. Along with that, we implemented the code by creating functions inside of the scenarioManager class. These functions include handTimeBasedEvents, loadScenario, applyingStartingConditions, handleScheduledEvents, checkVictoryConditions, and loadNextScenario.
-- Updated our previous code to work with the loading and saving within different scenarios (ex. recreating the grid of a scenario). 
 
 ### F2.b - Everyone 
 - Created a PlantType class, which dealt with the growing conditions and the special abilities.
