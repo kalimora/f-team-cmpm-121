@@ -1,6 +1,6 @@
 {
   "lint": {
-    "files" {
+    "files": {
       "include": ["src/**/*.{ts,js}"],
       "exclude": ["node_modules"]
     }
