@@ -4,7 +4,7 @@ import Player from "../objects/Player.ts";
 import Phaser from "phaser";
 import LZString from "lz-string";
 
-class PlantType {
+class PlantType {  
   name: string;
   growthConditions: (
     x: number,
