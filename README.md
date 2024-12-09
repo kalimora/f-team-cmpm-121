@@ -433,12 +433,21 @@ Adapting to the F2 requirements taught us the importance of flexibility and coll
 ### F0+F1+F2 No major changes were made in for F0, F1, and F2, so the requirements are still met in F3. 
 
 ### F3.a - Everyone
--
+- We ensured that all text visible to the player can be translated into different written languages.
+- We avoided hard-coding any English text into the game, allowing for future localization into various languages.
+- We designed UI elements to be flexible, ensuring they can accommodate text expansion or contraction when different languages are selected.
 
 ### F3.b - Everyone
--
+- We localized the game to support three different written languages.
+  -  One language was chosen that uses a logographic script (Chinese).
+  -  One language was chosen that uses a right-to-left script (Arabic).
+  -  The third language is a common left-to-right script (Spanish).
+- All in-game text has been fully localized, ensuring proper support for the different scripts.
 
 ### F3.c - Everyone
--
+- Unable to complete due to time constraints.
+
+### F3.d - Everyone
+- Unable to complete due to time constraints. 
 
 Feel free to adapt this file as we change our objectives!
