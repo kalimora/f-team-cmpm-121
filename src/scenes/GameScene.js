@@ -2,10 +2,100 @@ import challengeScenario from "../scenarios/challenge_scenario.json" with { type
 import tutorialScenario from "../scenarios/tutorial_scenario.json" with { type: "json" };
 import Player from "../objects/Player.js";
 
+class PlantType {
+  constructor(name, growthConditions, specialAbility) {
+    this.name = name;
+    this.growthConditions = growthConditions;
+    this.specialAbility = specialAbility;
+  }
+
+  canGrow(x, y, gridState, gameTime) {
+    return this.growthConditions(x, y, gridState, gameTime);
+  }
+
+  applySpecialAbility(x, y, gridState) {
+    if (this.specialAbility) {
+      this.specialAbility(x, y, gridState);
+    }
+  }
+
+  grow(x, y, gridState, gameTime) {
+    const currentGrowthLevel = gridState.getGrowthLevel(x, y);
+    if (currentGrowthLevel < 5 && this.canGrow(x, y, gridState, gameTime)) {
+      const newGrowthLevel = currentGrowthLevel + 1;
+      gridState.setGrowthLevel(x, y, newGrowthLevel);
+      this.applySpecialAbility(x, y, gridState);
+      return newGrowthLevel;
+    }
+    return currentGrowthLevel;
+  }
+}
+
+const plantTypes = [
+  new PlantType("Sun Lover", 
+    (x, y, gridState, gameTime) => gridState.getSunLevel(x, y) > 3 && gridState.getWaterLevel(x, y) < 3 && gameTime % 2 === 0,
+    (x, y, gridState) => {
+      // Special ability: Increase sun level in adjacent cells
+      const neighbors = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]];
+      neighbors.forEach(([nx, ny]) => {
+        if (nx >= 0 && nx < gridState.gridSize && ny >= 0 && ny < gridState.gridSize) {
+          const currentSun = gridState.getSunLevel(nx, ny);
+          gridState.setSunLevel(nx, ny, Math.min(10, currentSun + 1));
+        }
+      });
+    }
+  ),
+  new PlantType("Water Lover", 
+    (x, y, gridState, gameTime) => gridState.getWaterLevel(x, y) > 3 && gridState.getSunLevel(x, y) < 3 && gameTime % 3 === 0,
+    (x, y, gridState) => {
+      // Special ability: Increase water level in adjacent cells
+      const neighbors = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]];
+      neighbors.forEach(([nx, ny]) => {
+        if (nx >= 0 && nx < gridState.gridSize && ny >= 0 && ny < gridState.gridSize) {
+          const currentWater = gridState.getWaterLevel(nx, ny);
+          gridState.setWaterLevel(nx, ny, Math.min(10, currentWater + 1));
+        }
+      });
+    }
+  ),
+  new PlantType("Balanced", 
+    (x, y, gridState) => Math.abs(gridState.getSunLevel(x, y) - gridState.getWaterLevel(x, y)) <= 1,
+    (x, y, gridState) => {
+      // Special ability: Balance sun and water levels in current cell
+      const sunLevel = gridState.getSunLevel(x, y);
+      const waterLevel = gridState.getWaterLevel(x, y);
+      const average = Math.round((sunLevel + waterLevel) / 2);
+      gridState.setSunLevel(x, y, average);
+      gridState.setWaterLevel(x, y, average);
+    }
+  ),
+  new PlantType("Neighbor Dependent", 
+    (x, y, gridState) => {
+      const neighbors = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]].filter(([nx, ny]) => 
+        nx >= 0 && nx < gridState.gridSize && ny >= 0 && ny < gridState.gridSize
+      );
+      return neighbors.some(([nx, ny]) => gridState.getPlantType(nx, ny) !== 0);
+    },
+    (x, y, gridState) => {
+      // Special ability: Boost growth of neighboring plants
+      const neighbors = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]];
+      neighbors.forEach(([nx, ny]) => {
+        if (nx >= 0 && nx < gridState.gridSize && ny >= 0 && ny < gridState.gridSize) {
+          const currentGrowth = gridState.getGrowthLevel(nx, ny);
+          if (currentGrowth > 0 && currentGrowth < 5) {
+            gridState.setGrowthLevel(nx, ny, currentGrowth + 1);
+          }
+        }
+      });
+    }
+  )
+];
+
 class GridState {
   constructor(gridSize) {
     this.gridSize = gridSize;
     this.byteArray = new Uint8Array(gridSize * gridSize * 4); // Initialize the byte array with 4 bytes per cell
+    this.plantTyped = []
   }
 
   getValue(x, y, offset) {
@@ -32,12 +122,23 @@ class GridState {
     this.setValue(x, y, 1, value);
   }
 
+  definePlantType(name, growthConditions) {
+    this.plantTypes.push({ name, growthConditions });
+    return this.plantTypes.length - 1; // Return the index of the new plant type
+  }
+
   getPlantType(x, y) {
     return this.getValue(x, y, 2);
   }
 
   setPlantType(x, y, value) {
     this.setValue(x, y, 2, value);
+  }
+
+  canPlantGrow(x, y) {
+    const plantType = this.getPlantType(x, y);
+    if (!plantType) return false;
+    return plantType.growthConditions(x, y, this);
   }
 
   getGrowthLevel(x, y) {
@@ -47,7 +148,7 @@ class GridState {
   setGrowthLevel(x, y, value) {
     this.setValue(x, y, 3, value);
   }
-
+  
   clear() {
     this.byteArray.fill(0);
   }
@@ -58,6 +159,7 @@ class GridState {
     const waterColorIntensity = Math.min(255, waterLevel * 25);
     return Phaser.Display.Color.GetColor(sunColorIntensity, 100, waterColorIntensity);
   }
+  
 }
 
 class ScenarioManager {
@@ -85,7 +187,7 @@ class ScenarioManager {
     
     console.log(`Loaded scenario: ${scenario.scenarioName}`);
   }
-
+  
   applyStartingConditions(startConditions) {
     const { gridSize, playerPosition, plants } = startConditions;
   
@@ -282,7 +384,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.on("complete", () => {
       console.log("Loading tutorial scenario...");
       this.scenarioManager.loadScenario("tutorial");
-      this.createGrid(); // Create the grid only after loading the scenario
+      this.createGrid();
       this.setupKeyboardControls();
       this.checkForAutoSave();
       this.time.addEvent({
@@ -317,14 +419,26 @@ export default class GameScene extends Phaser.Scene {
       - R: Reap a plant at the current position
       - 1-5: Save game to a slot
       - Shift + 1-5: Load game from a slot
-      - Advance Time Button: Manually advance game time
-  
+      - Ctrl + Z: Undo last action
+      - Ctrl + Y: Redo last action
+      - Advance Time Button: Manually advance 
+        game time
+
+      Plant Types:
+      - Sun Lover: Thrives in high sun, low water 
+        conditions
+      - Water Lover: Prefers high water, low sun 
+        conditions
+      - Balanced: Grows best with equal sun and 
+        water levels
+      - Neighbor Dependent: Grows when adjacent
+        to other plants
       Click [Close] to close the instructions.
     `;
   
     this.instructionsContent = this.add.text(
-      this.game.config.width / 2 - 200,
-      this.game.config.height / 2 - 150,
+      this.game.config.width / 2 - 300,
+      this.game.config.height / 2 - 250,
       instructionsText,
       { font: "18px Arial", fill: "#ffffff", wordWrap: { width: 400 } }
     );
@@ -333,7 +447,7 @@ export default class GameScene extends Phaser.Scene {
     // Add a "Close" button
     this.closeButton = this.add
       .text(
-        this.game.config.width / 2 - 40,
+        this.game.config.width / 1.3 - 40,
         this.game.config.height / 2 + 150,
         "[Close]",
         { font: "20px Arial", fill: "#ff0000" }
@@ -635,25 +749,25 @@ collectPlantData() {
   }
 
   sowPlant() {
-  const cell = this.grid.find(
-    (c) => c.x === this.player.gridX && c.y === this.player.gridY
-  );
-  if (cell && this.gridState.getPlantType(cell.x, cell.y) === 0) {
-    const plantType = Phaser.Math.Between(1, 3);
-    this.gridState.setPlantType(cell.x, cell.y, plantType);
-    this.gridState.setGrowthLevel(cell.x, cell.y, 1);
-    this.gridState.setWaterLevel(cell.x, cell.y, 5);
-    this.gridState.setSunLevel(cell.x, cell.y, 5);
-    const frameIndex = plantType !== 3 ? 0 : 6;
-    cell.plantSprite = this.add.sprite(cell.rect.x, cell.rect.y, 'plant', frameIndex).setScale(2);
-    cell.plantSprite.setDepth(0.5);
-    console.log(`Planted type ${plantType} at (${cell.x}, ${cell.y})`);
-    this.updatePlantVisuals();
-    this.pushCurrentStateToUndoStack();
-  } else {
-    console.log("A plant already exists here.");
+    const cell = this.grid.find(
+      (c) => c.x === this.player.gridX && c.y === this.player.gridY
+    );
+    if (cell && this.gridState.getPlantType(cell.x, cell.y) === 0) {
+      const plantTypeIndex = Phaser.Math.Between(0, plantTypes.length - 1);
+      this.gridState.setPlantType(cell.x, cell.y, plantTypeIndex);
+      this.gridState.setGrowthLevel(cell.x, cell.y, 1);
+      this.gridState.setWaterLevel(cell.x, cell.y, 5);
+      this.gridState.setSunLevel(cell.x, cell.y, 5);
+      const frameIndex = plantTypeIndex * 6;
+      cell.plantSprite = this.add.sprite(cell.rect.x, cell.rect.y, 'plant', frameIndex).setScale(2);
+      cell.plantSprite.setDepth(0.5);
+      console.log(`Planted ${plantTypes[plantTypeIndex].name} at (${cell.x}, ${cell.y})`);
+      this.updatePlantVisuals();
+      this.pushCurrentStateToUndoStack();
+    } else {
+      console.log("A plant already exists here.");
+    }
   }
-}
   
 reapPlant() {
   const cell = this.grid.find(
@@ -743,20 +857,27 @@ updateGridVisuals() {
     this.updateGridVisuals();
   }
   
-  plantGrowth(x, y, plantType) {
-    const currentGrowthLevel = this.gridState.getGrowthLevel(x, y);
-    const waterLevel = this.gridState.getWaterLevel(x, y);
-    const sunLevel = this.gridState.getSunLevel(x, y);
-  
-    if (currentGrowthLevel < 5 && waterLevel > 0 && sunLevel > 0) {
-      const newGrowthLevel = currentGrowthLevel + 1;
-      this.gridState.setGrowthLevel(x, y, newGrowthLevel);
-      this.gridState.setWaterLevel(x, y, Math.max(0, waterLevel - 1));
-      this.gridState.setSunLevel(x, y, Math.max(0, sunLevel - 1));
-  
-      console.log(`Plant at (${x}, ${y}) grew to level ${newGrowthLevel}`);
+  plantGrowth(x, y, plantTypeIndex) {
+    const plantType = plantTypes[plantTypeIndex];
+    const newGrowthLevel = plantType.grow(x, y, this.gridState, this.gameTime);
+    if (newGrowthLevel > this.gridState.getGrowthLevel(x, y)) {
+      console.log(`${plantType.name} at (${x}, ${y}) grew to level ${newGrowthLevel}`);
       this.updatePlantVisuals();
     }
+  }
+
+  addPlantType(name, growthConditions) {
+    const newPlantType = new PlantType(name, growthConditions);
+    plantTypes.push(newPlantType);
+    return plantTypes.length - 1; // Return the index of the new plant type
+  }
+  
+  removePlantType(index) {
+    if (index >= 0 && index < plantTypes.length) {
+      plantTypes.splice(index, 1);
+      return true;
+    }
+    return false;
   }
 
   getCurrentState() {
@@ -771,7 +892,7 @@ updateGridVisuals() {
   }
 
   advanceTime() {
-    this.gameTime += 1;
+    this.gameTime = (this.gameTime || 0) + 1;
     console.log(`Time advanced to ${this.gameTime}`);
     this.scenarioManager.advanceTime();
     this.handleTimeBasedEvents();
