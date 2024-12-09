@@ -1,8 +1,8 @@
 {
   "lint": {
-    {
-      "include": ["src/**/*"],
-      "exclude": ["tests/**/*", "node_modules/**/*"]
-    }    
+    "files" {
+      "include": ["src/**/*.{ts,js}"],
+      "exclude": ["node_modules"]
+    }
   }
 }
