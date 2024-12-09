@@ -281,7 +281,7 @@ interface GameState {
   scenarioName: string;
 }
 
-class _ScenarioManager {
+class ScenarioManager {
   private gameScene: GameScene;
   private scenarios: Record<string, Scenario>;
   private activeScenario: Scenario | null = null;
