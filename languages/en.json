@@ -4,5 +4,6 @@
     "Advance Time Button": "Advance Time Button",
     "continue": "Do you want to continue where you left off?",
     "select language": "Select Language",
-    "instructions_text": "Instructions:\n\n- Arrow Keys: Move Character\n- S: Sow a plant at the current position\n- R: Reap a plant at the current position\n- 1-5: Save game to a slot\n- Shift + 1-5: Load game from a slot\n- Ctrl + Z: Undo last action\n- Ctrl + Y: Redo last action\n- Advance Time Button: Manually advance \ngame time\n\nPlant Types:\n- Sun Lover: Thrives in high sun, low water \nconditions\n- Water Lover: Prefers high water, low sun \nconditions\n- Balanced: Grows best with equal sun and \nwater levels\n- Neighbor Dependent: Grows when adjacent\nto other plants\n\nClick [Close] to close the instructions."
+    "instructions_text": "Instructions:\n\n- Arrow Keys: Move Character\n- S: Sow a plant at the current position\n- R: Reap a plant at the current position\n- 1-5: Save game to a slot\n- Shift + 1-5: Load game from a slot\n- Ctrl + Z: Undo last action\n- Ctrl + Y: Redo last action\n- Advance Time Button: Manually advance \ngame time\n\nPlant Types:\n- Sun Lover: Thrives in high sun, low water \nconditions\n- Water Lover: Prefers high water, low sun \nconditions\n- Balanced: Grows best with equal sun and \nwater levels\n- Neighbor Dependent: Grows when adjacent\nto other plants\n\nClick [Close] to close the instructions.",
+    "victory_message": "Victory conditions met! Scenario completed."
   }
