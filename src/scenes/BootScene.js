@@ -13,7 +13,7 @@ export default class BootScene extends Phaser.Scene {
       frameHeight: 48,
     });
     this.load.image("timeAdvanceButton", "img/Default.png"); // Load the time control button image
-    this.load.spritesheet("plant", "img/Basic_Plants.png", {
+    this.load.spritesheet("plants", "img/plants.png", {
       frameWidth: 16,
       frameHeight: 16,
     });
