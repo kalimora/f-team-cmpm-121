@@ -1,9 +1,6 @@
 {
-  "include": ["src/**/*.{ts,js}"],
-  "exclude": ["node_modules"],
   "lint": {
-    "rules": {
-      "exclude": []
-    }
+    "include": ["src/**/*.{ts,js}"],
+    "exclude": ["node_modules"]
   }
 }
