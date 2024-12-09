@@ -193,13 +193,13 @@ Adapting to the F1 requirements helped us build a more player-centric game, emph
 - Imported the scenarios into the gameScene.js file. Along with that, we implemented the code by creating functions inside of the scenarioManager class. These functions include handTimeBasedEvents, loadScenario, applyingStartingConditions, handleScheduledEvents, checkVictoryConditions, and loadNextScenario.
 - Updated our previous code to work with the loading and saving within different scenarios (ex. recreating the grid of a scenario). 
 
-### F2.b - Kaylee & Shea 
+### F2.b - Everyone 
 - Created a PlantType class, which dealt with the growing conditions and the special abilities.
 - Created the new plant types in a const condition.
 - Created new functions for our plant type index (ex. addPlantType, removePlantType) 
 - Updated our previous code to work with these plant types (ex. sowPlant, plantGrowth)
 
-### F2.c - Samina & Hasina
+### F2.c - Everyone
 -
 
 Feel free to adapt this file as we change our objectives!
