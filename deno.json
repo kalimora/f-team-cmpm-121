@@ -1,7 +1,6 @@
 {
-    "lint": {
-      "files": {
-        "exclude": ["./lib/phaser.js"]
-      }
-    }
+  "lint": {
+    "include": ["src/**/*.{ts,js}"],
+    "exclude": ["node_modules"]
   }
+}
