@@ -134,6 +134,7 @@ Overall, we shifted our approach to focus on simplicity, collaboration, and iter
 ## F1 Documentation
 
 ### F0 No changes since the last assignment. All requirements are met for F0. 
+### Memory allocation strategy illustration: 
 ![bytearray](https://github.com/user-attachments/assets/100a548f-265a-4f67-b830-03adab776e40)
 
 ### F1.a - Everyone
