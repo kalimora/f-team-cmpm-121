@@ -132,6 +132,9 @@ At first, we tried to complete each feature entirely before moving on to the nex
 Overall, we shifted our approach to focus on simplicity, collaboration, and iteration. This helped us meet the F0 requirements effectively and build a strong foundation for future improvements.
 
 ## F1 Documentation
+
+### F0 No changes since the last assignment. All requirements are met for F0. 
+
 ### F1.a - Everyone
 - We made sure the game's grid state is stored in a single contiguous byte array.
 - We changed our grid state to use a byte array as the main format.
